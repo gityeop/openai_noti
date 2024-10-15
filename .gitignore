@@ -1,0 +1,20 @@
+*.zip
+*.wav
+# Node modules
+node_modules/
+
+# Prettier cache
+node_modules/.cache/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/

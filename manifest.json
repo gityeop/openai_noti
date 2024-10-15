@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "ChatNoti",
+  "version": "1.0",
+  "description": "Add sound alarms to ChatGPT, ChatGPT에 소리 알람 기능",
+  "icons": {
+    "128": "128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://chatgpt.com/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "host_permissions": ["https://chatgpt.com/*"],
+  "web_accessible_resources": [
+    {
+      "resources": ["sounds/*.wav"],
+      "matches": ["https://chatgpt.com/*"]
+    }
+  ]
+}
