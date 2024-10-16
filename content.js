@@ -1,26 +1,52 @@
 // content.js
 
 let audio = null;
+let soundEnabled = true;
+let volume = 0.5;
+
+// 초기 설정 값을 로드
+chrome.storage.sync.get(["volume", "soundEnabled"], (result) => {
+  if (result.volume !== undefined) {
+    volume = result.volume / 100;
+  }
+  if (result.soundEnabled !== undefined) {
+    soundEnabled = result.soundEnabled;
+  }
+});
+
+// 소리 알림 설정이 변경될 때 업데이트
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "sync") {
+    if (changes.soundEnabled) {
+      soundEnabled = changes.soundEnabled.newValue;
+    }
+    if (changes.volume) {
+      volume = changes.volume.newValue / 100;
+      if (audio) {
+        audio.volume = volume;
+      }
+    }
+  }
+});
 
 // 알림 소리를 재생하는 함수
 function playSound() {
-  // 저장된 볼륨 값을 로드
-  chrome.storage.sync.get(["volume"], (result) => {
-    const volume = result.volume !== undefined ? result.volume / 100 : 0.5; // 기본값 0.5
+  if (!soundEnabled) {
+    return; // 소리 알림이 비활성화되어 있으면 함수 종료
+  }
 
-    if (!audio) {
-      const soundURL = chrome.runtime.getURL("sounds/notification_2.wav");
-      audio = new Audio(soundURL);
-      audio.volume = volume;
-      audio.addEventListener("ended", () => {
-        audio.currentTime = 0; // 재생 완료 후 초기화
-      });
-    } else {
-      audio.volume = volume;
-    }
+  if (!audio) {
+    const soundURL = chrome.runtime.getURL("sounds/notification_2.wav");
+    audio = new Audio(soundURL);
+    audio.volume = volume;
+    audio.addEventListener("ended", () => {
+      audio.currentTime = 0; // 재생 완료 후 초기화
+    });
+  } else {
+    audio.volume = volume;
+  }
 
-    audio.play();
-  });
+  audio.play();
 }
 
 function isGenerating() {
