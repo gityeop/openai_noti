@@ -6,12 +6,19 @@
   "icons": {
     "128": "128.png"
   },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "128": "128.png"
+    }
+  },
   "content_scripts": [
     {
       "matches": ["https://chatgpt.com/*"],
       "js": ["content.js"]
     }
   ],
+  "permissions": ["storage"],
   "host_permissions": ["https://chatgpt.com/*"],
   "web_accessible_resources": [
     {

@@ -1,15 +1,28 @@
+// content.js
+
 let audio = null;
 
+// 알림 소리를 재생하는 함수
 function playSound() {
-  if (!audio) {
-    const soundURL = chrome.runtime.getURL("sounds/notification_2.wav");
-    audio = new Audio(soundURL);
-    audio.addEventListener("ended", () => {
-      audio.currentTime = 0; // 재생 완료 후 초기화
-    });
-  }
-  audio.play();
+  // 저장된 볼륨 값을 로드
+  chrome.storage.sync.get(["volume"], (result) => {
+    const volume = result.volume !== undefined ? result.volume / 100 : 0.5; // 기본값 0.5
+
+    if (!audio) {
+      const soundURL = chrome.runtime.getURL("sounds/notification_2.wav");
+      audio = new Audio(soundURL);
+      audio.volume = volume;
+      audio.addEventListener("ended", () => {
+        audio.currentTime = 0; // 재생 완료 후 초기화
+      });
+    } else {
+      audio.volume = volume;
+    }
+
+    audio.play();
+  });
 }
+
 function isGenerating() {
   // "icon-lg" 클래스를 가지면서 "mx-2"와 "text-token-text-secondary" 클래스를 가지지 않는 SVG 요소 선택
   const generatingElement = document.querySelector(
@@ -36,8 +49,7 @@ const observerCallback = function (mutationsList, observer) {
         }
       } else if (generating && isCompleted()) {
         generating = false; // 답변 생성 완료
-        // 배경 스크립트로 소리 재생 요청 메시지 전송
-        playSound();
+        playSound(); // 알림 소리 재생
       }
     }
   }
@@ -47,10 +59,6 @@ const observerCallback = function (mutationsList, observer) {
 const observer = new MutationObserver(observerCallback);
 
 // 감시할 대상 요소 선택
-//   const targetNode = document.querySelector(
-//     "div.flex.items-end.gap-1\\.5.pl-4.md\\:gap-2"
-//     //   md:pt-0 dark:border-white/20 md:border-transparent md:dark:border-transparent w-full
-//   ); // Updated selector
 const targetNode = document.body;
 
 if (targetNode) {

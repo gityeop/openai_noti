@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ChatNoti 설정</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        width: 300px;
+        box-sizing: border-box;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      .slider-container {
+        margin-top: 20px;
+      }
+      .slider-label {
+        margin-bottom: 10px;
+        font-weight: bold;
+      }
+      .slider {
+        width: 100%;
+      }
+      .slider-value {
+        text-align: center;
+        margin-top: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>ChatNoti 설정</h2>
+
+    <div class="slider-container">
+      <div class="slider-label">알림 볼륨</div>
+      <input
+        type="range"
+        id="volumeSlider"
+        class="slider"
+        min="0"
+        max="100"
+        value="50"
+      />
+      <div id="volumeValue" class="slider-value">50</div>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
