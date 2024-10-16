@@ -12,13 +12,15 @@
       }
       h2 {
         margin-top: 0;
+        text-align: center;
       }
       .section {
         margin-top: 20px;
       }
       .slider-label,
       .toggle-label,
-      .sound-label {
+      .sound-label,
+      .toc-label {
         margin-bottom: 10px;
         font-weight: bold;
       }
@@ -62,7 +64,8 @@
       .toggle-container input[type="checkbox"]:checked::before {
         transform: translateX(20px);
       }
-      .sound-select {
+      .sound-select,
+      .toc-toggle {
         width: 100%;
         padding: 5px;
         font-size: 14px;
@@ -102,6 +105,16 @@
       <select id="soundSelect" class="sound-select">
         <!-- 소리 파일 목록이 여기에 동적으로 추가됩니다 -->
       </select>
+    </div>
+
+    <!-- TOC 기능 토글 섹션 -->
+    <div class="section">
+      <div class="toggle-label toc-label">TOC 기능</div>
+      <div class="toggle-container">
+        <span>OFF</span>
+        <input type="checkbox" id="tocToggle" />
+        <span>ON</span>
+      </div>
     </div>
 
     <script src="popup.js"></script>
