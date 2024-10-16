@@ -15,19 +15,19 @@ commitizen:
         message: "커밋 유형을 선택하세요:"
         choices:
           - value: feat
-            name: "feat: 새로운 기능 추가"
+            name: "✨ feat: 새로운 기능 추가"
           - value: fix
-            name: "fix: 버그 수정"
+            name: "🐛 fix: 버그 수정"
           - value: docs
-            name: "docs: 문서 수정"
+            name: "📝 docs: 문서 수정"
           - value: style
-            name: "style: 코드 포맷팅, 세미콜론 누락 등 (코드 변경 없음)"
+            name: "💄 style: 코드 포맷팅, 세미콜론 누락 등 (코드 변경 없음)"
           - value: refactor
-            name: "refactor: 코드 리팩토링 (기능 변경 없음)"
+            name: "♻️ refactor: 코드 리팩토링 (기능 변경 없음)"
           - value: test
-            name: "test: 테스트 코드 추가/수정"
+            name: "✅ test: 테스트 코드 추가/수정"
           - value: chore
-            name: "chore: 빌드 관련 업무 수정 및 패키지 매니저 설정"
+            name: "🔧 chore: 빌드 관련 업무 수정 및 패키지 매니저 설정"
       - type: input
         name: subject
         message: "변경 사항을 간략히 설명하세요 (한글로):"
