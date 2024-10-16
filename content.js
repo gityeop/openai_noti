@@ -3,16 +3,23 @@
 let audio = null;
 let soundEnabled = true;
 let volume = 0.5;
+let selectedSound = "notification_1.wav"; // 기본 소리 파일
 
 // 초기 설정 값을 로드
-chrome.storage.sync.get(["volume", "soundEnabled"], (result) => {
-  if (result.volume !== undefined) {
-    volume = result.volume / 100;
-  }
-  if (result.soundEnabled !== undefined) {
-    soundEnabled = result.soundEnabled;
-  }
-});
+chrome.storage.sync.get(
+  ["volume", "soundEnabled", "selectedSound"],
+  (result) => {
+    if (result.volume !== undefined) {
+      volume = result.volume / 100;
+    }
+    if (result.soundEnabled !== undefined) {
+      soundEnabled = result.soundEnabled;
+    }
+    if (result.selectedSound !== undefined) {
+      selectedSound = result.selectedSound;
+    }
+  },
+);
 
 // 소리 알림 설정이 변경될 때 업데이트
 chrome.storage.onChanged.addListener((changes, area) => {
@@ -26,6 +33,13 @@ chrome.storage.onChanged.addListener((changes, area) => {
         audio.volume = volume;
       }
     }
+    if (changes.selectedSound) {
+      selectedSound = changes.selectedSound.newValue;
+      if (audio) {
+        audio.src = chrome.runtime.getURL(`sounds/${selectedSound}`);
+        audio.load();
+      }
+    }
   }
 });
 
@@ -36,7 +50,7 @@ function playSound() {
   }
 
   if (!audio) {
-    const soundURL = chrome.runtime.getURL("sounds/notification_2.wav");
+    const soundURL = chrome.runtime.getURL(`sounds/${selectedSound}`);
     audio = new Audio(soundURL);
     audio.volume = volume;
     audio.addEventListener("ended", () => {
@@ -44,6 +58,11 @@ function playSound() {
     });
   } else {
     audio.volume = volume;
+    // 소리 파일이 변경된 경우 src 업데이트
+    if (audio.src !== chrome.runtime.getURL(`sounds/${selectedSound}`)) {
+      audio.src = chrome.runtime.getURL(`sounds/${selectedSound}`);
+      audio.load();
+    }
   }
 
   audio.play();
