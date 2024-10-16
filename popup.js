@@ -5,11 +5,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const volumeValue = document.getElementById("volumeValue");
   const soundToggle = document.getElementById("soundToggle");
   const soundSelect = document.getElementById("soundSelect");
+  const tocToggle = document.getElementById("tocToggle");
 
   // 소리 파일 목록 (sounds 폴더에 있는 wav 파일 이름을 추가)
   const soundFiles = [
     "notification_1.wav",
     "notification_2.wav",
+    "notification_3.wav",
     // 새로운 소리 파일이 추가될 때마다 여기에 추가
   ];
 
@@ -26,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 초기 설정 값을 로드
   chrome.storage.sync.get(
-    ["volume", "soundEnabled", "selectedSound"],
+    ["volume", "soundEnabled", "selectedSound", "tocEnabled"],
     (result) => {
       // 볼륨 설정 로드
       if (result.volume !== undefined) {
@@ -49,6 +51,13 @@ document.addEventListener("DOMContentLoaded", () => {
         soundSelect.value = result.selectedSound;
       } else {
         soundSelect.value = soundFiles[0]; // 기본값 첫 번째 소리
+      }
+
+      // TOC 기능 토글 상태 로드
+      if (result.tocEnabled !== undefined) {
+        tocToggle.checked = result.tocEnabled;
+      } else {
+        tocToggle.checked = false; // 기본값 OFF
       }
     },
   );
@@ -75,6 +84,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const selectedSound = event.target.value;
     chrome.storage.sync.set({ selectedSound: selectedSound }, () => {
       console.log("선택된 소리 설정됨:", selectedSound);
+    });
+  });
+
+  // TOC 기능 토글 변경 시 저장
+  tocToggle.addEventListener("change", (event) => {
+    const tocEnabled = event.target.checked;
+    chrome.storage.sync.set({ tocEnabled: tocEnabled }, () => {
+      console.log("TOC 기능 설정됨:", tocEnabled);
     });
   });
 });

@@ -1,15 +1,15 @@
 {
   "manifest_version": 3,
   "name": "ChatNoti",
-  "version": "1.0",
-  "description": "Add sound alarms to ChatGPT, ChatGPT에 소리 알람 기능",
+  "version": "1.3",
+  "description": "Add sound alarms and Table of Contents to ChatGPT, ChatGPT에 소리 알람 및 목차 기능 추가",
   "icons": {
-    "128": "128.png"
+    "128": "icons/128.png"
   },
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "128": "128.png"
+      "128": "icons/128.png"
     }
   },
   "content_scripts": [
