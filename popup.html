@@ -13,10 +13,11 @@
       h2 {
         margin-top: 0;
       }
-      .slider-container {
+      .section {
         margin-top: 20px;
       }
-      .slider-label {
+      .slider-label,
+      .toggle-label {
         margin-bottom: 10px;
         font-weight: bold;
       }
@@ -27,12 +28,56 @@
         text-align: center;
         margin-top: 5px;
       }
+      .toggle-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .toggle-container input[type="checkbox"] {
+        width: 40px;
+        height: 20px;
+        position: relative;
+        appearance: none;
+        background: #c6c6c6;
+        outline: none;
+        border-radius: 20px;
+        transition: background 0.3s;
+        cursor: pointer;
+      }
+      .toggle-container input[type="checkbox"]:checked {
+        background: #4caf50;
+      }
+      .toggle-container input[type="checkbox"]::before {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 16px;
+        height: 16px;
+        background: white;
+        border-radius: 50%;
+        transition: transform 0.3s;
+      }
+      .toggle-container input[type="checkbox"]:checked::before {
+        transform: translateX(20px);
+      }
     </style>
   </head>
   <body>
     <h2>ChatNoti 설정</h2>
 
-    <div class="slider-container">
+    <!-- 소리 알림 토글 섹션 -->
+    <div class="section">
+      <div class="toggle-label">소리 알림</div>
+      <div class="toggle-container">
+        <span>OFF</span>
+        <input type="checkbox" id="soundToggle" />
+        <span>ON</span>
+      </div>
+    </div>
+
+    <!-- 볼륨 조절 섹션 -->
+    <div class="section">
       <div class="slider-label">알림 볼륨</div>
       <input
         type="range"
