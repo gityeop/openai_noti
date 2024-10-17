@@ -194,13 +194,16 @@ function updateTOC() {
   // 모든 메시지(article) 요소 선택
   const articles = document.querySelectorAll("main article");
 
+  let userQuestionCount = 0; // 사용자 질문 개수 카운트
+
   articles.forEach((article) => {
-    // 어시스턴트 메시지는 div.markdown 요소를 포함하므로 이를 이용해 구분
+    // 어시스턴트 메시지와 사용자 메시지 구분
     const isAssistantMessage = article.querySelector("div.markdown");
     if (!isAssistantMessage) {
       // 사용자 메시지의 내용은 div.whitespace-pre-wrap에 있음
       const contentElement = article.querySelector("div.whitespace-pre-wrap");
       if (contentElement) {
+        userQuestionCount++;
         const questionText = contentElement.textContent.trim();
         const shortText =
           questionText.length > 15
@@ -230,6 +233,11 @@ function updateTOC() {
       }
     }
   });
+  if (userQuestionCount > 0) {
+    tocContainer.style.display = "block"; // 질문이 있을 때 TOC 표시
+  } else {
+    tocContainer.style.display = "none"; // 질문이 없을 때 TOC 숨김
+  }
   updateTOCStyle(isDarkMode);
 }
 
