@@ -3,11 +3,12 @@
 let audio = null;
 let soundEnabled = true;
 let volume = 0.5;
-let selectedSound = "notification_1.wav"; // 기본 소리 파일
+let selectedSound = "notification_1.wav"; // Default sound file
 let tocEnabled = false;
 let tocContainer = null;
+let lastUrl = window.location.href; // For detecting URL changes
 
-// 초기 설정 값을 로드
+// Load initial settings
 chrome.storage.sync.get(
   ["volume", "soundEnabled", "selectedSound", "tocEnabled"],
   (result) => {
@@ -27,14 +28,19 @@ chrome.storage.sync.get(
     if (result.tocEnabled !== undefined) {
       tocEnabled = result.tocEnabled;
       console.log("TOC enabled:", tocEnabled);
-      if (tocEnabled) {
-        createTOC();
-      }
     }
+
+    // Initialize TOC after loading settings
+    if (tocEnabled) {
+      initializeTOC();
+    }
+
+    // Start observing URL changes
+    observeUrlChange();
   },
 );
 
-// 소리 알림 설정이 변경될 때 업데이트
+// Update settings when changed
 chrome.storage.onChanged.addListener((changes, area) => {
   console.log("Storage changes detected:", changes, "Area:", area);
   if (area === "sync") {
@@ -63,7 +69,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
       tocEnabled = changes.tocEnabled.newValue;
       console.log("TOC enabled changed to:", tocEnabled);
       if (tocEnabled) {
-        createTOC();
+        initializeTOC();
       } else {
         removeTOC();
       }
@@ -71,12 +77,12 @@ chrome.storage.onChanged.addListener((changes, area) => {
   }
 });
 
-// 알림 소리를 재생하는 함수
+// Function to play the notification sound
 function playSound() {
   console.log("playSound called");
   if (!soundEnabled) {
     console.log("Sound is disabled, exiting playSound");
-    return; // 소리 알림이 비활성화되어 있으면 함수 종료
+    return; // Exit if sound notifications are disabled
   }
 
   if (!audio) {
@@ -85,13 +91,13 @@ function playSound() {
     audio = new Audio(soundURL);
     audio.volume = volume;
     audio.addEventListener("ended", () => {
-      audio.currentTime = 0; // 재생 완료 후 초기화
+      audio.currentTime = 0; // Reset after playback
       console.log("Audio ended, currentTime reset to 0");
     });
   } else {
     audio.volume = volume;
     console.log("Audio volume set to:", volume);
-    // 소리 파일이 변경된 경우 src 업데이트
+    // Update src if the sound file has changed
     const newSoundURL = chrome.runtime.getURL(`sounds/${selectedSound}`);
     if (audio.src !== newSoundURL) {
       console.log("Updating audio source to:", newSoundURL);
@@ -116,7 +122,7 @@ let isDarkMode =
 
 console.log("Initial isDarkMode:", isDarkMode);
 
-// 시스템 모드 변경 감지 및 스타일 업데이트
+// Detect system dark mode changes and update styles
 window
   .matchMedia("(prefers-color-scheme: dark)")
   .addEventListener("change", (e) => {
@@ -125,29 +131,41 @@ window
     updateTOCStyle(isDarkMode);
   });
 
-// TOC 위치를 계산하는 함수
+// Function to calculate TOC left position
 function calculateLeftPosition() {
-  // 윈도우 너비에 따라 leftPosition을 동적으로 계산
   const minLeft = 20;
-  const maxLeft = window.innerWidth - 169; // 200px(Toc 너비) + 20px 여백
+  const maxLeft = window.innerWidth - 169; // 160px width + padding + margin
   let leftPosition = window.innerWidth;
   leftPosition = Math.max(minLeft, Math.min(leftPosition, maxLeft));
   console.log("Calculated TOC left position:", leftPosition);
   return leftPosition;
 }
 
-// TOC 컨테이너 생성 함수
+// Initialize TOC
+function initializeTOC() {
+  console.log("initializeTOC called");
+  createTOC();
+  updateTOC();
+
+  // Observe changes in the main content area
+  observeMainContainer();
+
+  // Listen for window resize to adjust TOC position
+  window.addEventListener("resize", onWindowResize);
+}
+
+// Create TOC container
 function createTOC() {
   console.log("createTOC called");
   if (tocContainer) {
     console.log("TOC already exists, exiting createTOC");
-    return; // 이미 TOC가 생성된 경우
+    return; // TOC already exists
   }
 
   tocContainer = document.createElement("div");
   tocContainer.id = "chatnoti-toc";
   tocContainer.style.position = "fixed";
-  tocContainer.style.top = "56px"; // Y값 60 이상
+  tocContainer.style.top = "56px";
   tocContainer.style.left = calculateLeftPosition() + "px";
   tocContainer.style.width = "160px";
   tocContainer.style.maxHeight = "80vh";
@@ -156,9 +174,9 @@ function createTOC() {
   tocContainer.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.1)";
   tocContainer.style.padding = "10px";
   tocContainer.style.zIndex = "1000";
-  tocContainer.style.fontSize = "12px"; // 글씨 크기 더 작게
+  tocContainer.style.fontSize = "12px";
 
-  // 시스템 모드에 따른 스타일 적용
+  // Apply styles based on system mode
   updateTOCStyle(isDarkMode);
 
   const tocTitle = document.createElement("div");
@@ -175,12 +193,9 @@ function createTOC() {
 
   document.body.appendChild(tocContainer);
   console.log("TOC created and added to document body");
-
-  // 윈도우 크기 변경 시 TOC 위치 업데이트
-  window.addEventListener("resize", onWindowResize);
 }
 
-// 윈도우 리사이즈 이벤트 핸들러
+// Window resize handler
 function onWindowResize() {
   console.log("Window resized");
   if (tocContainer) {
@@ -189,7 +204,7 @@ function onWindowResize() {
   }
 }
 
-// TOC 스타일 업데이트 함수
+// Update TOC style based on dark mode
 function updateTOCStyle(isDarkMode) {
   console.log("updateTOCStyle called with isDarkMode:", isDarkMode);
   if (!tocContainer) {
@@ -198,22 +213,22 @@ function updateTOCStyle(isDarkMode) {
   }
 
   if (isDarkMode) {
-    tocContainer.style.backgroundColor = "#1e1e1e"; // 다크 모드 배경색
-    tocContainer.style.color = "#ffffff"; // 다크 모드 텍스트 색상
-    tocContainer.style.border = "1px solid #555555"; // 다크 모드 테두리 색상
+    tocContainer.style.backgroundColor = "#1e1e1e"; // Dark mode background
+    tocContainer.style.color = "#ffffff"; // Dark mode text color
+    tocContainer.style.border = "1px solid #555555"; // Dark mode border
   } else {
-    tocContainer.style.backgroundColor = "#ffffff"; // 라이트 모드 배경색
-    tocContainer.style.color = "#333333"; // 라이트 모드 텍스트 색상
-    tocContainer.style.border = "1px solid #cccccc"; // 라이트 모드 테두리 색상
+    tocContainer.style.backgroundColor = "#ffffff"; // Light mode background
+    tocContainer.style.color = "#333333"; // Light mode text color
+    tocContainer.style.border = "1px solid #cccccc"; // Light mode border
   }
 
-  // TOC 링크 스타일 업데이트
+  // Update link styles
   const tocLinks = tocContainer.querySelectorAll("a");
   tocLinks.forEach((link) => {
     if (isDarkMode) {
-      link.style.color = "#4ea8de"; // 다크 모드 링크 색상
+      link.style.color = "#4ea8de"; // Dark mode link color
     } else {
-      link.style.color = "#007bff"; // 라이트 모드 링크 색상
+      link.style.color = "#007bff"; // Light mode link color
     }
     link.style.textDecoration = "none";
     link.style.cursor = "pointer";
@@ -221,7 +236,7 @@ function updateTOCStyle(isDarkMode) {
   });
 }
 
-// TOC 제거 함수
+// Remove TOC
 function removeTOC() {
   console.log("removeTOC called");
   if (tocContainer) {
@@ -229,9 +244,10 @@ function removeTOC() {
     tocContainer = null;
     console.log("TOC removed");
   }
+  disconnectMainObserver();
 }
 
-// TOC 업데이트 함수
+// Update TOC content
 function updateTOC() {
   console.log("updateTOC called");
   if (!tocEnabled || !tocContainer) {
@@ -242,17 +258,17 @@ function updateTOC() {
   }
 
   const tocList = tocContainer.querySelector("ul");
-  tocList.innerHTML = ""; // 기존 목록 초기화
+  tocList.innerHTML = ""; // Clear existing list
 
-  // 모든 메시지(article) 요소 선택
+  // Select all article elements
   const articles = document.querySelectorAll("main article");
   console.log("Found articles:", articles.length);
 
-  articles.forEach((article) => {
-    // 어시스턴트 메시지는 div.markdown 요소를 포함하므로 이를 이용해 구분
+  articles.forEach((article, index) => {
+    // Assistant messages contain div.markdown
     const isAssistantMessage = article.querySelector("div.markdown");
     if (!isAssistantMessage) {
-      // 사용자 메시지의 내용은 div.whitespace-pre-wrap에 있음
+      // User message content is in div.whitespace-pre-wrap
       const contentElement = article.querySelector("div.whitespace-pre-wrap");
       if (contentElement) {
         const questionText = contentElement.textContent.trim();
@@ -267,7 +283,7 @@ function updateTOC() {
         const tocLink = document.createElement("a");
         tocLink.href = "#";
         tocLink.textContent = shortText;
-        // link.style.color is set in updateTOCStyle
+        tocLink.dataset.articleIndex = index; // Store index for reference
         tocLink.style.textDecoration = "none";
         tocLink.style.cursor = "pointer";
 
@@ -289,68 +305,112 @@ function updateTOC() {
   updateTOCStyle(isDarkMode);
 }
 
-// 답변 생성 중인지 확인하는 함수
+// Function to observe changes in the main content area
+let mainObserver = null;
+function observeMainContainer() {
+  const mainContainer = document.querySelector("main");
+  if (!mainContainer) {
+    console.log("Main container not found, cannot observe.");
+    return;
+  }
+
+  // Disconnect previous observer if any
+  if (mainObserver) {
+    mainObserver.disconnect();
+  }
+
+  mainObserver = new MutationObserver((mutationsList, observer) => {
+    console.log("Main content mutated");
+    updateTOC();
+  });
+
+  const config = { childList: true, subtree: true };
+  mainObserver.observe(mainContainer, config);
+  console.log("Started observing main container for mutations");
+}
+
+function disconnectMainObserver() {
+  if (mainObserver) {
+    mainObserver.disconnect();
+    mainObserver = null;
+    console.log("Main observer disconnected");
+  }
+}
+
+// Function to detect URL changes
+function observeUrlChange() {
+  setInterval(() => {
+    if (window.location.href !== lastUrl) {
+      console.log("URL changed from", lastUrl, "to", window.location.href);
+      lastUrl = window.location.href;
+
+      // Re-initialize TOC if enabled
+      if (tocEnabled) {
+        removeTOC();
+        initializeTOC();
+      }
+    }
+  }, 1000); // Check every second
+}
+
+// Answer generation status functions (unchanged)
 function isGenerating() {
-  // "icon-lg" 클래스를 가지면서 "mx-2"와 "text-token-text-secondary" 클래스를 가지지 않는 SVG 요소 선택
   const generatingElement = document.querySelector(
     "svg.icon-lg:not(.mx-2):not(.text-token-text-secondary)",
   );
   return generatingElement;
 }
 
-// 답변 완료 상태 확인 함수
 function isCompleted() {
-  // 특정 부모 요소 하위의 "icon-2xl" 클래스를 가진 SVG 요소 선택
   const completedElement = document.querySelector("div.min-w-8 svg.icon-2xl");
   return completedElement;
 }
 
 let generating = false;
 
-// MutationObserver 콜백 함수
-const observerCallback = function (mutationsList, observer) {
-  console.log("MutationObserver callback called");
-  let tocNeedsUpdate = false;
+// Notification sound MutationObserver callback
+const notificationObserverCallback = function (mutationsList, observer) {
+  console.log("NotificationObserver callback called");
 
   for (const mutation of mutationsList) {
     if (mutation.type === "childList") {
-      console.log("Child list mutation detected:", mutation);
+      console.log(
+        "Child list mutation detected (NotificationObserver):",
+        mutation,
+      );
       if (isGenerating()) {
         if (!generating) {
-          generating = true; // 답변 생성 중
+          generating = true; // Answer is generating
           console.log("Answer is generating");
         }
       } else if (generating && isCompleted()) {
-        generating = false; // 답변 생성 완료
+        generating = false; // Answer generation completed
         console.log("Answer generation completed");
-        playSound(); // 알림 소리 재생
-        tocNeedsUpdate = true;
-      }
-
-      // TOC 기능 활성화 시, 질문 추가 시 TOC 업데이트
-      if (tocEnabled) {
-        tocNeedsUpdate = true;
+        playSound(); // Play notification sound
       }
     }
   }
-
-  if (tocEnabled && tocNeedsUpdate) {
-    const config = { childList: true, subtree: true };
-    observer.disconnect(); // 감시 중단
-    console.log("Updating TOC");
-    updateTOC();
-    observer.observe(targetNode, config);
-  }
 };
 
-// MutationObserver 설정
-const observer = new MutationObserver(observerCallback);
+// Set up the notification observer
+const notificationObserver = new MutationObserver(notificationObserverCallback);
+const notificationTargetNode = document.body;
 
-// 감시할 대상 요소 선택
-const targetNode = document.body;
-
-if (targetNode) {
+if (notificationTargetNode) {
   const config = { childList: true, subtree: true };
-  observer.observe(targetNode, config);
-  console.log("MutationObserver started observing targetNode");
+  notificationObserver.observe(notificationTargetNode, config);
+  console.log("NotificationObserver started observing notificationTargetNode");
 }
+
+// Event listener for page load
+window.addEventListener("load", () => {
+  console.log("Page fully loaded");
+
+  // Initialize TOC if enabled
+  if (tocEnabled) {
+    initializeTOC();
+  }
+
+  // Start observing URL changes
+  observeUrlChange();
+});
