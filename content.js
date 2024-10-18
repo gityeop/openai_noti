@@ -234,6 +234,7 @@ function updateTOC() {
       // User message content is in div.whitespace-pre-wrap
       const contentElement = article.querySelector("div.whitespace-pre-wrap");
       if (contentElement) {
+        userQuestionCount++;
         const questionText = contentElement.textContent.trim();
         const shortText =
           questionText.length > 15
@@ -263,6 +264,11 @@ function updateTOC() {
       }
     }
   });
+  if (userQuestionCount > 0) {
+    tocContainer.style.display = "block"; // 질문이 있을 때 TOC 표시
+  } else {
+    tocContainer.style.display = "none"; // 질문이 없을 때 TOC 숨김
+  }
   updateTOCStyle(isDarkMode);
 }
 
