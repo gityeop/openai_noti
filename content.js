@@ -226,7 +226,7 @@ function updateTOC() {
 
   // Select all article elements
   const articles = document.querySelectorAll("main article");
-
+  let userQuestionCount = 0;
   articles.forEach((article, index) => {
     // Assistant messages contain div.markdown
     const isAssistantMessage = article.querySelector("div.markdown");
