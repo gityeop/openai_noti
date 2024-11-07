@@ -139,7 +139,7 @@ function createShowTOCButton() {
   showTOCButton = document.createElement("button");
   showTOCButton.textContent = "🙋‍♂️";
   showTOCButton.style.position = "fixed";
-  showTOCButton.style.top = "60px"; // 필요에 따라 조정
+  showTOCButton.style.top = "65px"; // 필요에 따라 조정
   showTOCButton.style.right = "0px"; // 필요에 따라 조정
   showTOCButton.style.zIndex = "1000";
   showTOCButton.style.display = "none"; // 초기에는 숨김
@@ -433,17 +433,17 @@ function disconnectMainObserver() {
 
 // Function to wait for 'main' element and initialize TOC
 function waitForMainAndInitializeTOC() {
-  console.log("Waiting for 'main' element to be available");
+  // console.log("Waiting for 'main' element to be available");
 
   if (document.querySelector("main")) {
-    console.log("'main' element is already available");
+    // console.log("'main' element is already available");
     initializeTOC();
   } else {
     const bodyObserver = new MutationObserver((mutationsList, observer) => {
       for (const mutation of mutationsList) {
         if (mutation.type === "childList") {
           if (document.querySelector("main")) {
-            console.log("'main' element added to the DOM");
+            // console.log("'main' element added to the DOM");
             observer.disconnect(); // Stop observing once 'main' is found
             initializeTOC();
             break;
@@ -453,7 +453,7 @@ function waitForMainAndInitializeTOC() {
     });
 
     bodyObserver.observe(document.body, { childList: true, subtree: true });
-    console.log("Started observing document body for 'main' element");
+    // console.log("Started observing document body for 'main' element");
   }
 }
 
@@ -477,12 +477,20 @@ function isGenerating() {
   const generatingElement = document.querySelector(
     "svg.icon-lg:not(.mx-2):not(.text-token-text-secondary)",
   );
-  return generatingElement;
+  const generatingSearchButton = document.querySelector(
+    'button[data-testid="stop-button"]',
+  );
+
+  return generatingElement || generatingSearchButton;
 }
 
 function isCompleted() {
   const completedElement = document.querySelector("div.min-w-8 svg.icon-2xl");
-  return completedElement;
+  const completedElementInSearchMode = document.querySelector(
+    "span[data-state='closed'] button[data-testid='send-button'] svg.icon-2xl",
+  );
+
+  return completedElement || completedElementInSearchMode;
 }
 
 let generating = false;
@@ -491,10 +499,10 @@ let generating = false;
 const notificationObserverCallback = function (mutationsList, observer) {
   for (const mutation of mutationsList) {
     if (mutation.type === "childList") {
-      console.log(
-        "Child list mutation detected (NotificationObserver):",
-        mutation,
-      );
+      // console.log(
+      //   "Child list mutation detected (NotificationObserver):",
+      //   mutation
+      // );
       if (isGenerating()) {
         if (!generating) {
           generating = true; // Answer is generating
