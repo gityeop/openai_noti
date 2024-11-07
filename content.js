@@ -6,9 +6,11 @@ let volume = 0.5;
 let selectedSound = "notification_1.wav"; // Default sound file
 let tocEnabled = false;
 let tocContainer = null;
+let showTOCButton = null;
 let lastUrl = window.location.href; // For detecting URL changes
-
+let tocVisible = true; // TOC의 가시성 상태를 추적
 // Load initial settings
+
 chrome.storage.sync.get(
   ["volume", "soundEnabled", "selectedSound", "tocEnabled"],
   (result) => {
@@ -120,6 +122,7 @@ function calculateLeftPosition() {
 // Initialize TOC
 function initializeTOC() {
   createTOC();
+  createShowTOCButton();
   updateTOC();
 
   // Observe changes in the main content area
@@ -128,7 +131,56 @@ function initializeTOC() {
   // Listen for window resize to adjust TOC position
   window.addEventListener("resize", onWindowResize);
 }
+// 'Show TOC' 버튼을 생성하는 함수 추가
+function createShowTOCButton() {
+  if (showTOCButton) {
+    return;
+  }
+  showTOCButton = document.createElement("button");
+  showTOCButton.textContent = "🙋‍♂️";
+  showTOCButton.style.position = "fixed";
+  showTOCButton.style.top = "65px"; // 필요에 따라 조정
+  showTOCButton.style.right = "0px"; // 필요에 따라 조정
+  showTOCButton.style.zIndex = "1000";
+  showTOCButton.style.display = "none"; // 초기에는 숨김
+  showTOCButton.style.borderTopLeftRadius = "10px"; // 왼쪽 위 모서리
+  showTOCButton.style.borderBottomLeftRadius = "10px"; // 왼쪽 아래 모서리
+  showTOCButton.style.fontSize = "15px";
+  showTOCButton.addEventListener("click", () => {
+    showTOC();
+    showTOCButton.style.display = "none";
+    tocVisible = true;
+  });
 
+  document.body.appendChild(showTOCButton);
+}
+function injectAnimationStyles() {
+  const style = document.createElement("style");
+  style.innerHTML = `
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    @keyframes slideOut {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+injectAnimationStyles();
 // Create TOC container
 function createTOC() {
   if (tocContainer) {
@@ -148,15 +200,37 @@ function createTOC() {
   tocContainer.style.padding = "10px";
   tocContainer.style.zIndex = "1000";
   tocContainer.style.fontSize = "12px";
+  tocContainer.style.transform = "translateX(100%)"; // 초기 위치를 화면 밖으로 설정
+  tocContainer.style.transition = "transform 0.3s ease-in-out"; // 트랜지션 추가
 
   // Apply styles based on system mode
   updateTOCStyle(isDarkMode);
+  const tocHeader = document.createElement("div");
+  tocHeader.style.display = "flex";
+  tocHeader.style.alignItems = "center";
+  tocHeader.style.justifyContent = "space-between";
+  tocHeader.style.marginBottom = "10px";
 
   const tocTitle = document.createElement("div");
   tocTitle.textContent = "목차";
   tocTitle.style.fontWeight = "bold";
-  tocTitle.style.marginBottom = "10px";
-  tocContainer.appendChild(tocTitle);
+
+  // 'Hide TOC' 버튼 추가
+  const hideButton = document.createElement("button");
+  hideButton.textContent = "🫣";
+  hideButton.style.cursor = "pointer";
+  hideButton.style.borderRadius = "8px";
+  hideButton.style.fontSize = "15px";
+
+  hideButton.addEventListener("click", () => {
+    hideTOC();
+    showTOCButton.style.display = "block";
+    tocVisible = false; // TOC 가시성 상태 업데이트
+  });
+  tocHeader.appendChild(tocTitle);
+  tocHeader.appendChild(hideButton);
+
+  tocContainer.appendChild(tocHeader);
 
   const tocList = document.createElement("ul");
   tocList.style.listStyleType = "none";
@@ -167,6 +241,28 @@ function createTOC() {
   document.body.appendChild(tocContainer);
 }
 
+function showTOC() {
+  tocContainer.style.display = "block";
+  tocContainer.style.animation = "none";
+  requestAnimationFrame(() => {
+    tocContainer.style.animation = "slideIn 0.3s forwards";
+  });
+}
+
+function hideTOC() {
+  tocContainer.style.animation = "none";
+  requestAnimationFrame(() => {
+    tocContainer.style.animation = "slideOut 0.3s forwards";
+  });
+  tocContainer.addEventListener("animationend", onAnimationEnd);
+
+  function onAnimationEnd() {
+    tocContainer.style.display = "none";
+    tocContainer.style.transform = "translateX(100%)";
+    tocContainer.style.opacity = "0"; // 투명도 초기화
+    tocContainer.removeEventListener("animationend", onAnimationEnd);
+  }
+}
 // Window resize handler
 function onWindowResize() {
   if (tocContainer) {
@@ -201,6 +297,32 @@ function updateTOCStyle(isDarkMode) {
     link.style.textDecoration = "none";
     link.style.cursor = "pointer";
   });
+  // 'Hide TOC' 버튼 스타일
+  const hideButton = tocContainer.querySelector("button");
+  if (hideButton) {
+    hideButton.style.backgroundColor = isDarkMode ? "#333333" : "#f0f0f0";
+    hideButton.style.color = isDarkMode ? "#ffffff" : "#333333";
+    hideButton.style.border = isDarkMode
+      ? "1px solid #555555"
+      : "1px solid #cccccc";
+    hideButton.style.padding = "5px 10px";
+    hideButton.style.cursor = "pointer";
+  }
+
+  // 'Show TOC' 버튼 스타일
+  if (showTOCButton) {
+    showTOCButton.style.backgroundColor = isDarkMode ? "#333333" : "#f0f0f0";
+    showTOCButton.style.color = isDarkMode ? "#ffffff" : "#333333";
+    showTOCButton.style.border = isDarkMode
+      ? "1px solid #555555"
+      : "1px solid #cccccc";
+    showTOCButton.style.padding = "5px 10px";
+    showTOCButton.style.cursor = "pointer";
+  }
+  tocContainer.style.transform = tocVisible
+    ? "translateX(0)"
+    : "translateX(100%)";
+  tocContainer.style.opacity = tocVisible ? "1" : "0";
 }
 
 // Remove TOC
@@ -209,6 +331,11 @@ function removeTOC() {
     tocContainer.remove();
     tocContainer = null;
   }
+  if (showTOCButton) {
+    showTOCButton.remove();
+    showTOCButton = null;
+  }
+  tocVisible = true; // TOC 가시성 상태 초기화
   disconnectMainObserver();
 }
 
@@ -265,7 +392,11 @@ function updateTOC() {
     }
   });
   if (userQuestionCount > 0) {
-    tocContainer.style.display = "block"; // 질문이 있을 때 TOC 표시
+    if (tocVisible) {
+      tocContainer.style.display = "block";
+    } else {
+      tocContainer.style.display = "none";
+    }
   } else {
     tocContainer.style.display = "none"; // 질문이 없을 때 TOC 숨김
   }
@@ -302,17 +433,17 @@ function disconnectMainObserver() {
 
 // Function to wait for 'main' element and initialize TOC
 function waitForMainAndInitializeTOC() {
-  console.log("Waiting for 'main' element to be available");
+  // console.log("Waiting for 'main' element to be available");
 
   if (document.querySelector("main")) {
-    console.log("'main' element is already available");
+    // console.log("'main' element is already available");
     initializeTOC();
   } else {
     const bodyObserver = new MutationObserver((mutationsList, observer) => {
       for (const mutation of mutationsList) {
         if (mutation.type === "childList") {
           if (document.querySelector("main")) {
-            console.log("'main' element added to the DOM");
+            // console.log("'main' element added to the DOM");
             observer.disconnect(); // Stop observing once 'main' is found
             initializeTOC();
             break;
@@ -322,7 +453,7 @@ function waitForMainAndInitializeTOC() {
     });
 
     bodyObserver.observe(document.body, { childList: true, subtree: true });
-    console.log("Started observing document body for 'main' element");
+    // console.log("Started observing document body for 'main' element");
   }
 }
 
@@ -346,12 +477,20 @@ function isGenerating() {
   const generatingElement = document.querySelector(
     "svg.icon-lg:not(.mx-2):not(.text-token-text-secondary)",
   );
-  return generatingElement;
+  const generatingSearchButton = document.querySelector(
+    'button[data-testid="stop-button"]',
+  );
+
+  return generatingElement || generatingSearchButton;
 }
 
 function isCompleted() {
   const completedElement = document.querySelector("div.min-w-8 svg.icon-2xl");
-  return completedElement;
+  const completedElementInSearchMode = document.querySelector(
+    "span[data-state='closed'] button[data-testid='send-button'] svg.icon-2xl",
+  );
+
+  return completedElement || completedElementInSearchMode;
 }
 
 let generating = false;
@@ -360,10 +499,10 @@ let generating = false;
 const notificationObserverCallback = function (mutationsList, observer) {
   for (const mutation of mutationsList) {
     if (mutation.type === "childList") {
-      console.log(
-        "Child list mutation detected (NotificationObserver):",
-        mutation,
-      );
+      // console.log(
+      //   "Child list mutation detected (NotificationObserver):",
+      //   mutation
+      // );
       if (isGenerating()) {
         if (!generating) {
           generating = true; // Answer is generating
