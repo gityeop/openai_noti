@@ -10,6 +10,7 @@ let showTOCButton = null;
 let lastUrl = window.location.href; // For detecting URL changes
 let tocVisible = true; // TOC의 가시성 상태를 추적
 // Load initial settings
+
 chrome.storage.sync.get(
   ["volume", "soundEnabled", "selectedSound", "tocEnabled"],
   (result) => {
@@ -136,7 +137,7 @@ function createShowTOCButton() {
     return;
   }
   showTOCButton = document.createElement("button");
-  showTOCButton.textContent = ">> TOC";
+  showTOCButton.textContent = "🙋‍♂️";
   showTOCButton.style.position = "fixed";
   showTOCButton.style.top = "60px"; // 필요에 따라 조정
   showTOCButton.style.right = "0px"; // 필요에 따라 조정
@@ -144,15 +145,42 @@ function createShowTOCButton() {
   showTOCButton.style.display = "none"; // 초기에는 숨김
   showTOCButton.style.borderTopLeftRadius = "10px"; // 왼쪽 위 모서리
   showTOCButton.style.borderBottomLeftRadius = "10px"; // 왼쪽 아래 모서리
-  showTOCButton.style.fontSize = "12px";
+  showTOCButton.style.fontSize = "15px";
   showTOCButton.addEventListener("click", () => {
-    tocContainer.style.display = "block";
+    showTOC();
     showTOCButton.style.display = "none";
     tocVisible = true;
   });
 
   document.body.appendChild(showTOCButton);
 }
+function injectAnimationStyles() {
+  const style = document.createElement("style");
+  style.innerHTML = `
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    @keyframes slideOut {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+injectAnimationStyles();
 // Create TOC container
 function createTOC() {
   if (tocContainer) {
@@ -172,29 +200,37 @@ function createTOC() {
   tocContainer.style.padding = "10px";
   tocContainer.style.zIndex = "1000";
   tocContainer.style.fontSize = "12px";
+  tocContainer.style.transform = "translateX(100%)"; // 초기 위치를 화면 밖으로 설정
+  tocContainer.style.transition = "transform 0.3s ease-in-out"; // 트랜지션 추가
 
   // Apply styles based on system mode
   updateTOCStyle(isDarkMode);
+  const tocHeader = document.createElement("div");
+  tocHeader.style.display = "flex";
+  tocHeader.style.alignItems = "center";
+  tocHeader.style.justifyContent = "space-between";
+  tocHeader.style.marginBottom = "10px";
 
   const tocTitle = document.createElement("div");
   tocTitle.textContent = "목차";
   tocTitle.style.fontWeight = "bold";
-  tocTitle.style.marginBottom = "10px";
-  tocContainer.appendChild(tocTitle);
 
   // 'Hide TOC' 버튼 추가
   const hideButton = document.createElement("button");
-  hideButton.textContent = "TOC 숨기기";
-  hideButton.style.marginBottom = "5px";
+  hideButton.textContent = "🫣";
   hideButton.style.cursor = "pointer";
   hideButton.style.borderRadius = "8px";
-  hideButton.style.fontSize = "12px";
+  hideButton.style.fontSize = "15px";
+
   hideButton.addEventListener("click", () => {
-    tocContainer.style.display = "none";
+    hideTOC();
     showTOCButton.style.display = "block";
     tocVisible = false; // TOC 가시성 상태 업데이트
   });
-  tocContainer.appendChild(hideButton);
+  tocHeader.appendChild(tocTitle);
+  tocHeader.appendChild(hideButton);
+
+  tocContainer.appendChild(tocHeader);
 
   const tocList = document.createElement("ul");
   tocList.style.listStyleType = "none";
@@ -205,6 +241,28 @@ function createTOC() {
   document.body.appendChild(tocContainer);
 }
 
+function showTOC() {
+  tocContainer.style.display = "block";
+  tocContainer.style.animation = "none";
+  requestAnimationFrame(() => {
+    tocContainer.style.animation = "slideIn 0.3s forwards";
+  });
+}
+
+function hideTOC() {
+  tocContainer.style.animation = "none";
+  requestAnimationFrame(() => {
+    tocContainer.style.animation = "slideOut 0.3s forwards";
+  });
+  tocContainer.addEventListener("animationend", onAnimationEnd);
+
+  function onAnimationEnd() {
+    tocContainer.style.display = "none";
+    tocContainer.style.transform = "translateX(100%)";
+    tocContainer.style.opacity = "0"; // 투명도 초기화
+    tocContainer.removeEventListener("animationend", onAnimationEnd);
+  }
+}
 // Window resize handler
 function onWindowResize() {
   if (tocContainer) {
@@ -261,6 +319,10 @@ function updateTOCStyle(isDarkMode) {
     showTOCButton.style.padding = "5px 10px";
     showTOCButton.style.cursor = "pointer";
   }
+  tocContainer.style.transform = tocVisible
+    ? "translateX(0)"
+    : "translateX(100%)";
+  tocContainer.style.opacity = tocVisible ? "1" : "0";
 }
 
 // Remove TOC
