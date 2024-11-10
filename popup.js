@@ -6,8 +6,26 @@ document.addEventListener("DOMContentLoaded", () => {
   const soundToggle = document.getElementById("soundToggle");
   const soundSelect = document.getElementById("soundSelect");
   const tocToggle = document.getElementById("tocToggle");
+  const languageSelect = document.getElementById("languageSelect");
 
-  // 소리 파일 목록 (sounds 폴더에 있는 wav 파일 이름을 추가)
+  // 지원하는 언어 목록
+  const availableLanguages = {
+    en: "English",
+    ko: "한국어",
+    zh: "中文",
+    es: "Español",
+    // 다른 언어 추가 가능
+  };
+
+  // 언어 선택 드롭다운에 옵션 추가
+  for (const [code, name] of Object.entries(availableLanguages)) {
+    const option = document.createElement("option");
+    option.value = code;
+    option.textContent = name;
+    languageSelect.appendChild(option);
+  }
+
+  // 소리 파일 목록
   const soundFiles = [
     "notification_1.wav",
     "notification_2.wav",
@@ -28,7 +46,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 초기 설정 값을 로드
   chrome.storage.sync.get(
-    ["volume", "soundEnabled", "selectedSound", "tocEnabled"],
+    [
+      "volume",
+      "soundEnabled",
+      "selectedSound",
+      "tocEnabled",
+      "selectedLanguage",
+    ],
     (result) => {
       // 볼륨 설정 로드
       if (result.volume !== undefined) {
@@ -40,34 +64,58 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // 소리 알림 토글 상태 로드
-      if (result.soundEnabled !== undefined) {
-        soundToggle.checked = result.soundEnabled;
-      } else {
-        soundToggle.checked = true; // 기본값 ON
-      }
+      soundToggle.checked =
+        result.soundEnabled !== undefined ? result.soundEnabled : true;
 
       // 선택된 소리 파일 로드
-      if (result.selectedSound !== undefined) {
-        soundSelect.value = result.selectedSound;
-      } else {
-        soundSelect.value = soundFiles[0]; // 기본값 첫 번째 소리
-      }
+      soundSelect.value =
+        result.selectedSound !== undefined
+          ? result.selectedSound
+          : soundFiles[0];
 
       // TOC 기능 토글 상태 로드
-      if (result.tocEnabled !== undefined) {
-        tocToggle.checked = result.tocEnabled;
-      } else {
-        tocToggle.checked = false; // 기본값 OFF
-      }
+      tocToggle.checked =
+        result.tocEnabled !== undefined ? result.tocEnabled : false;
+
+      // 선택된 언어 로드
+      const browserLanguage = navigator.language.split("-")[0];
+      const defaultLanguage = availableLanguages[browserLanguage]
+        ? browserLanguage
+        : "en";
+      const selectedLanguage = result.selectedLanguage || defaultLanguage;
+      languageSelect.value = selectedLanguage;
+
+      // 선택된 언어로 텍스트 설정
+      setLanguage(selectedLanguage);
     },
   );
+
+  // 언어 설정 함수
+  function setLanguage(lang) {
+    document.getElementById("settingsTitle").textContent =
+      translations[lang].settingsTitle;
+    document.getElementById("soundNotification").textContent =
+      translations[lang].soundNotification;
+    document.getElementById("notificationVolume").textContent =
+      translations[lang].notificationVolume;
+    document.getElementById("selectNotificationSound").textContent =
+      translations[lang].selectNotificationSound;
+    document.getElementById("tocFeature").textContent =
+      translations[lang].tocFeature;
+    document.getElementById("soundOff").textContent = translations[lang].off;
+    document.getElementById("soundOn").textContent = translations[lang].on;
+    document.getElementById("tocOff").textContent = translations[lang].off;
+    document.getElementById("tocOn").textContent = translations[lang].on;
+    document.getElementById("languageLabel").textContent =
+      translations[lang].languageLabel || "Language";
+  }
 
   // 볼륨 슬라이더 변경 시 저장
   volumeSlider.addEventListener("input", (event) => {
     const volume = event.target.value;
     volumeValue.textContent = volume;
     chrome.storage.sync.set({ volume: Number(volume) }, () => {
-      console.log("볼륨 설정됨:", volume);
+      console.log(translations[languageSelect.value].volumeSet + ": " + volume);
     });
   });
 
@@ -75,7 +123,11 @@ document.addEventListener("DOMContentLoaded", () => {
   soundToggle.addEventListener("change", (event) => {
     const soundEnabled = event.target.checked;
     chrome.storage.sync.set({ soundEnabled: soundEnabled }, () => {
-      console.log("소리 알림 설정됨:", soundEnabled);
+      console.log(
+        translations[languageSelect.value].soundNotificationSet +
+          ": " +
+          soundEnabled,
+      );
     });
   });
 
@@ -83,7 +135,11 @@ document.addEventListener("DOMContentLoaded", () => {
   soundSelect.addEventListener("change", (event) => {
     const selectedSound = event.target.value;
     chrome.storage.sync.set({ selectedSound: selectedSound }, () => {
-      console.log("선택된 소리 설정됨:", selectedSound);
+      console.log(
+        translations[languageSelect.value].selectedSoundSet +
+          ": " +
+          selectedSound,
+      );
     });
   });
 
@@ -91,7 +147,18 @@ document.addEventListener("DOMContentLoaded", () => {
   tocToggle.addEventListener("change", (event) => {
     const tocEnabled = event.target.checked;
     chrome.storage.sync.set({ tocEnabled: tocEnabled }, () => {
-      console.log("TOC 기능 설정됨:", tocEnabled);
+      console.log(
+        translations[languageSelect.value].tocFeatureSet + ": " + tocEnabled,
+      );
+    });
+  });
+
+  // 언어 선택 변경 시 저장 및 텍스트 업데이트
+  languageSelect.addEventListener("change", (event) => {
+    const selectedLanguage = event.target.value;
+    chrome.storage.sync.set({ selectedLanguage: selectedLanguage }, () => {
+      console.log("언어 설정됨: " + selectedLanguage);
+      setLanguage(selectedLanguage);
     });
   });
 });

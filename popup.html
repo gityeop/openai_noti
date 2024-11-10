@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>ChatNoti 설정</title>
+    <title>ChatNoti Settings</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -73,21 +73,21 @@
     </style>
   </head>
   <body>
-    <h2>ChatNoti 설정</h2>
+    <h2 id="settingsTitle"></h2>
 
     <!-- 소리 알림 토글 섹션 -->
     <div class="section">
-      <div class="toggle-label">소리 알림</div>
+      <div class="toggle-label" id="soundNotification"></div>
       <div class="toggle-container">
-        <span>OFF</span>
+        <span id="soundOff"></span>
         <input type="checkbox" id="soundToggle" />
-        <span>ON</span>
+        <span id="soundOn"></span>
       </div>
     </div>
 
     <!-- 볼륨 조절 섹션 -->
     <div class="section">
-      <div class="slider-label">알림 볼륨</div>
+      <div class="slider-label" id="notificationVolume"></div>
       <input
         type="range"
         id="volumeSlider"
@@ -101,7 +101,7 @@
 
     <!-- 알림 소리 선택 섹션 -->
     <div class="section">
-      <div class="sound-label">알림 소리 선택</div>
+      <div class="sound-label" id="selectNotificationSound"></div>
       <select id="soundSelect" class="sound-select">
         <!-- 소리 파일 목록이 여기에 동적으로 추가됩니다 -->
       </select>
@@ -109,14 +109,21 @@
 
     <!-- TOC 기능 토글 섹션 -->
     <div class="section">
-      <div class="toggle-label toc-label">TOC 기능</div>
+      <div class="toggle-label toc-label" id="tocFeature"></div>
       <div class="toggle-container">
-        <span>OFF</span>
+        <span id="tocOff"></span>
         <input type="checkbox" id="tocToggle" />
-        <span>ON</span>
+        <span id="tocOn"></span>
       </div>
     </div>
-
+    <!-- 언어 선택 섹션 -->
+    <div class="section">
+      <div class="language-label" id="languageLabel">Language</div>
+      <select id="languageSelect" class="language-select">
+        <!-- 언어 목록이 여기에 동적으로 추가됩니다 -->
+      </select>
+    </div>
+    <script src="translations.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

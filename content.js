@@ -9,10 +9,12 @@ let tocContainer = null;
 let showTOCButton = null;
 let lastUrl = window.location.href; // For detecting URL changes
 let tocVisible = true; // TOC의 가시성 상태를 추적
+let selectedLanguage = "en"; // 기본값
+
 // Load initial settings
 
 chrome.storage.sync.get(
-  ["volume", "soundEnabled", "selectedSound", "tocEnabled"],
+  ["volume", "soundEnabled", "selectedSound", "tocEnabled", "selectedLanguage"],
   (result) => {
     if (result.volume !== undefined) {
       volume = result.volume / 100;
@@ -26,6 +28,12 @@ chrome.storage.sync.get(
     if (result.tocEnabled !== undefined) {
       tocEnabled = result.tocEnabled;
     }
+    // 선택된 언어 로드
+    const browserLanguage = navigator.language.split("-")[0];
+    const defaultLanguage = translations[browserLanguage]
+      ? browserLanguage
+      : "en";
+    selectedLanguage = result.selectedLanguage || defaultLanguage;
 
     // Initialize TOC after loading settings
     if (tocEnabled) {
@@ -63,6 +71,11 @@ chrome.storage.onChanged.addListener((changes, area) => {
       } else {
         removeTOC();
       }
+    }
+    if (changes.selectedLanguage) {
+      selectedLanguage = changes.selectedLanguage.newValue;
+      // 언어가 변경되었으므로 TOC를 업데이트합니다.
+      updateTOC();
     }
   }
 });
@@ -212,7 +225,7 @@ function createTOC() {
   tocHeader.style.marginBottom = "10px";
 
   const tocTitle = document.createElement("div");
-  tocTitle.textContent = "목차";
+  tocTitle.textContent = translations[selectedLanguage].tableOfContents;
   tocTitle.style.fontWeight = "bold";
 
   // 'Hide TOC' 버튼 추가
@@ -350,6 +363,12 @@ function updateTOC() {
 
   const tocList = tocContainer.querySelector("ul");
   tocList.innerHTML = ""; // Clear existing list
+  // TOC 제목 업데이트
+  const tocTitleElement = tocContainer.querySelector("div:first-child > div");
+  if (tocTitleElement) {
+    tocTitleElement.textContent =
+      translations[selectedLanguage].tableOfContents;
+  }
 
   // Select all article elements
   const articles = document.querySelectorAll("main article");
