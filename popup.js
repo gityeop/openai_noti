@@ -7,6 +7,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const soundSelect = document.getElementById("soundSelect");
   const tocToggle = document.getElementById("tocToggle");
   const languageSelect = document.getElementById("languageSelect");
+  const volumeContainer = document.getElementById("volumeContainer");
+  const soundSelectContainer = document.getElementById("soundSelectContainer");
 
   // 지원하는 언어 목록
   const availableLanguages = {
@@ -44,6 +46,24 @@ document.addEventListener("DOMContentLoaded", () => {
     soundSelect.appendChild(option);
   });
 
+  // Function to update disabled state
+  function updateSoundControlsState(enabled) {
+    if (!enabled) {
+      volumeContainer.classList.add("disabled");
+      soundSelectContainer.classList.add("disabled");
+    } else {
+      volumeContainer.classList.remove("disabled");
+      soundSelectContainer.classList.remove("disabled");
+    }
+  }
+
+  // Add event listener for sound toggle
+  soundToggle.addEventListener("change", (e) => {
+    updateSoundControlsState(e.target.checked);
+    // Save the state
+    chrome.storage.sync.set({ soundEnabled: e.target.checked });
+  });
+
   // 초기 설정 값을 로드
   chrome.storage.sync.get(
     [
@@ -64,8 +84,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // 소리 알림 토글 상태 로드
-      soundToggle.checked =
+      const soundEnabled =
         result.soundEnabled !== undefined ? result.soundEnabled : true;
+      soundToggle.checked = soundEnabled;
+      updateSoundControlsState(soundEnabled);
 
       // 선택된 소리 파일 로드
       soundSelect.value =
@@ -92,22 +114,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 언어 설정 함수
   function setLanguage(lang) {
-    document.getElementById("settingsTitle").textContent =
-      translations[lang].settingsTitle;
-    document.getElementById("soundNotification").textContent =
-      translations[lang].soundNotification;
-    document.getElementById("notificationVolume").textContent =
-      translations[lang].notificationVolume;
-    document.getElementById("selectNotificationSound").textContent =
-      translations[lang].selectNotificationSound;
-    document.getElementById("tocFeature").textContent =
-      translations[lang].tocFeature;
-    document.getElementById("soundOff").textContent = translations[lang].off;
-    document.getElementById("soundOn").textContent = translations[lang].on;
-    document.getElementById("tocOff").textContent = translations[lang].off;
-    document.getElementById("tocOn").textContent = translations[lang].on;
-    document.getElementById("languageLabel").textContent =
-      translations[lang].languageLabel || "Language";
+    const elements = {
+      settingsTitle: translations[lang].settingsTitle,
+      soundNotification: translations[lang].soundNotification,
+      notificationVolume: translations[lang].notificationVolume,
+      selectNotificationSound: translations[lang].selectNotificationSound,
+      tocFeature: translations[lang].tocFeature,
+      languageLabel: translations[lang].languageLabel || "Language",
+    };
+
+    // Safely update text content for each element
+    Object.entries(elements).forEach(([id, text]) => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.textContent = text;
+      }
+    });
   }
 
   // 볼륨 슬라이더 변경 시 저장

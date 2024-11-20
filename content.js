@@ -361,13 +361,30 @@ function updateTOC() {
     return;
   }
 
+  // Check if translations are available
+  if (typeof translations === "undefined" || !translations[selectedLanguage]) {
+    console.log("Translations not available yet, retrying in 100ms");
+    setTimeout(updateTOC, 100);
+    return;
+  }
+
   const tocList = tocContainer.querySelector("ul");
+  if (!tocList) {
+    console.log("TOC list element not found");
+    return;
+  }
+
   tocList.innerHTML = ""; // Clear existing list
+
   // TOC 제목 업데이트
   const tocTitleElement = tocContainer.querySelector("div:first-child > div");
   if (tocTitleElement) {
-    tocTitleElement.textContent =
-      translations[selectedLanguage].tableOfContents;
+    try {
+      tocTitleElement.textContent =
+        translations[selectedLanguage].tableOfContents;
+    } catch (error) {
+      console.log("Error updating TOC title:", error);
+    }
   }
 
   // Select all article elements

@@ -2,34 +2,104 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChatNoti Settings</title>
     <style>
+      :root {
+        /* Light mode colors (default) */
+        --primary-color: #000000;
+        --secondary-color: #03dac6;
+        --background-color: #f5f5f5;
+        --text-color: #000000;
+        --toggle-off-color: #e0e0e0;
+        --section-bg: white;
+        --section-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        --select-border: #ddd;
+        --disabled-color: #9e9e9e;
+        --disabled-bg: #f0f0f0;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          /* Dark mode colors */
+          --primary-color: #ffffff;
+          --secondary-color: #03dac6;
+          --background-color: #121212;
+          --text-color: #ffffff;
+          --toggle-off-color: #4f4f4f;
+          --section-bg: #1e1e1e;
+          --section-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+          --select-border: #333;
+          --disabled-color: #666666;
+          --disabled-bg: #1a1a1a;
+        }
+      }
       body {
-        font-family: Arial, sans-serif;
+        font-family: 'Roboto', sans-serif;
+        background-color: var(--background-color);
+        color: var(--text-color);
         padding: 20px;
-        width: 300px;
-        box-sizing: border-box;
+        width: 350px;
+        min-height: 450px;
+        margin: 0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        transition: background-color 0.3s, color 0.3s;
       }
       h2 {
-        margin-top: 0;
+        color: var(--primary-color);
         text-align: center;
+        font-size: 24px;
+        margin-bottom: 30px;
       }
       .section {
-        margin-top: 20px;
+        margin-bottom: 20px;
+        background-color: var(--section-bg);
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: var(--section-shadow);
+        transition: background-color 0.3s;
       }
-      .slider-label,
-      .toggle-label,
-      .sound-label,
-      .toc-label {
+      .slider-label, .toggle-label, .sound-label, .toc-label, .language-label {
+        font-weight: 500;
         margin-bottom: 10px;
-        font-weight: bold;
+        color: var(--primary-color);
+      }
+      .toggle-container input[type="checkbox"] {
+        width: 40px;
+        height: 20px;
+        position: relative;
+        -webkit-appearance: none;  /* Safari and Chrome */
+        -moz-appearance: none;     /* Firefox */
+        appearance: none;          /* Standard syntax */
+        background: #c6c6c6;
+        outline: none;
+        border-radius: 20px;
+        transition: background 0.3s;
+        cursor: pointer;
       }
       .slider {
         width: 100%;
+        height: 8px;
+        border-radius: 5px;
+        background: #d3d3d3;
+        outline: none;
+        opacity: 0.7;
+        transition: opacity .2s;
+      }
+      .slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--secondary-color);
+        cursor: pointer;
       }
       .slider-value {
         text-align: center;
-        margin-top: 5px;
+        margin-top: 10px;
+        font-weight: bold;
       }
       .toggle-container {
         display: flex;
@@ -37,91 +107,103 @@
         justify-content: space-between;
       }
       .toggle-container input[type="checkbox"] {
-        width: 40px;
-        height: 20px;
-        position: relative;
-        appearance: none;
-        background: #c6c6c6;
-        outline: none;
-        border-radius: 20px;
-        transition: background 0.3s;
+        height: 0;
+        width: 0;
+        visibility: hidden;
+      }
+      .toggle-container label {
         cursor: pointer;
+        text-indent: -9999px;
+        width: 50px;
+        height: 25px;
+        background: var(--toggle-off-color);
+        display: block;
+        border-radius: 100px;
+        position: relative;
       }
-      .toggle-container input[type="checkbox"]:checked {
-        background: #4caf50;
-      }
-      .toggle-container input[type="checkbox"]::before {
-        content: "";
+      .toggle-container label:after {
+        content: '';
         position: absolute;
         top: 2px;
         left: 2px;
-        width: 16px;
-        height: 16px;
-        background: white;
-        border-radius: 50%;
-        transition: transform 0.3s;
+        width: 21px;
+        height: 21px;
+        background: #fff;
+        border-radius: 90px;
+        transition: 0.3s;
       }
-      .toggle-container input[type="checkbox"]:checked::before {
-        transform: translateX(20px);
+      .toggle-container input:checked + label {
+        background: var(--secondary-color);
       }
-      .sound-select,
-      .toc-toggle {
+      .toggle-container input:checked + label:after {
+        left: calc(100% - 2px);
+        transform: translateX(-100%);
+      }
+      select {
         width: 100%;
-        padding: 5px;
+        padding: 8px;
+        border-radius: 5px;
+        border: 1px solid var(--select-border);
         font-size: 14px;
+        color: var(--text-color);
+        background-color: var(--section-bg);
+        transition: border-color 0.3s, background-color 0.3s, color 0.3s;
+        margin-top: 5px;
+      }
+      select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+      }
+      .disabled {
+        opacity: 0.5;
+        pointer-events: none;
+      }
+
+      .sound-settings {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .volume-container {
+        margin-top: 5px;
       }
     </style>
   </head>
   <body>
-    <h2 id="settingsTitle"></h2>
-
-    <!-- 소리 알림 토글 섹션 -->
+    <h2 id="settingsTitle">ChatNoti Settings</h2>
     <div class="section">
-      <div class="toggle-label" id="soundNotification"></div>
-      <div class="toggle-container">
-        <span id="soundOff"></span>
-        <input type="checkbox" id="soundToggle" />
-        <span id="soundOn"></span>
+      <div class="sound-settings">
+        <div>
+          <div class="toggle-label" id="soundNotification">Sound Notification</div>
+          <div class="toggle-container">
+            <input type="checkbox" id="soundToggle" />
+            <label for="soundToggle">Toggle</label>
+          </div>
+        </div>
+
+        <div class="volume-container" id="volumeContainer">
+          <div class="slider-label" id="notificationVolume">Notification Volume</div>
+          <input type="range" id="volumeSlider" class="slider" min="0" max="100" value="50" />
+          <div id="volumeValue" class="slider-value">50</div>
+        </div>
+
+        <div class="sound-select-container" id="soundSelectContainer">
+          <div class="sound-label" id="selectNotificationSound">Select Notification Sound</div>
+          <select id="soundSelect"></select>
+        </div>
       </div>
     </div>
-
-    <!-- 볼륨 조절 섹션 -->
     <div class="section">
-      <div class="slider-label" id="notificationVolume"></div>
-      <input
-        type="range"
-        id="volumeSlider"
-        class="slider"
-        min="0"
-        max="100"
-        value="50"
-      />
-      <div id="volumeValue" class="slider-value">50</div>
-    </div>
-
-    <!-- 알림 소리 선택 섹션 -->
-    <div class="section">
-      <div class="sound-label" id="selectNotificationSound"></div>
-      <select id="soundSelect" class="sound-select">
-        <!-- 소리 파일 목록이 여기에 동적으로 추가됩니다 -->
-      </select>
-    </div>
-
-    <!-- TOC 기능 토글 섹션 -->
-    <div class="section">
-      <div class="toggle-label toc-label" id="tocFeature"></div>
+      <div class="toggle-label toc-label" id="tocFeature">TOC Feature</div>
       <div class="toggle-container">
-        <span id="tocOff"></span>
         <input type="checkbox" id="tocToggle" />
-        <span id="tocOn"></span>
+        <label for="tocToggle">Toggle</label>
       </div>
     </div>
-    <!-- 언어 선택 섹션 -->
     <div class="section">
       <div class="language-label" id="languageLabel">Language</div>
-      <select id="languageSelect" class="language-select">
-        <!-- 언어 목록이 여기에 동적으로 추가됩니다 -->
-      </select>
+      <select id="languageSelect"></select>
     </div>
     <script src="translations.js"></script>
     <script src="popup.js"></script>
