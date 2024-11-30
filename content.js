@@ -508,25 +508,19 @@ function observeUrlChange() {
   }, 1000); // Check every second
 }
 
-// Answer generation status functions (unchanged)
+// Answer generation status functions (updated)
 function isGenerating() {
-  const generatingElement = document.querySelector(
-    "svg.icon-lg:not(.mx-2):not(.text-token-text-secondary)",
-  );
-  const generatingSearchButton = document.querySelector(
+  const stopButton = document.querySelector(
     'button[data-testid="stop-button"]',
   );
-
-  return generatingElement || generatingSearchButton;
+  return stopButton !== null;
 }
 
 function isCompleted() {
-  const completedElement = document.querySelector("div.min-w-8 svg.icon-2xl");
-  const completedElementInSearchMode = document.querySelector(
-    "span[data-state='closed'] button[data-testid='send-button'] svg.icon-2xl",
+  const speechButton = document.querySelector(
+    'button[data-testid="composer-speech-button"]',
   );
-
-  return completedElement || completedElementInSearchMode;
+  return speechButton !== null;
 }
 
 let generating = false;
