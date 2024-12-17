@@ -15,6 +15,11 @@
 ---
 
 📢**Feature updates**
+2024/12/17
+
+- Enhanced answer completion detection for GPT-4 compatibility
+- Support for new send button UI element
+
 2024/12/01
 
 - Update answer generation detection for new ChatGPT UI elements
@@ -36,6 +41,11 @@
 - Added Show/Hide Toc functionality
 
 📢**기능 업데이트**
+2024/12/17
+
+- GPT-4 호환성을 위한 답변 완료 감지 기능 강화
+- 새로운 전송 버튼 UI 요소 지원 추가
+
 2024/12/01
 
 - 새로운 ChatGPT UI 요소에 대한 답변 생성 감지 기능 업데이트
