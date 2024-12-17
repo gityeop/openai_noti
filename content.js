@@ -520,7 +520,10 @@ function isCompleted() {
   const speechButton = document.querySelector(
     'button[data-testid="composer-speech-button"]',
   );
-  return speechButton !== null;
+  const sendButton = document.querySelector(
+    'button[data-testid="send-button"]',
+  );
+  return speechButton !== null || sendButton !== null;
 }
 
 let generating = false;
