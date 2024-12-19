@@ -29,9 +29,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 소리 파일 목록
   const soundFiles = [
-    "notification_1.wav",
-    "notification_2.wav",
-    "notification_3.wav",
+    "sounds/notification_1.wav",
+    "sounds/notification_2.wav",
+    "sounds/notification_3.wav",
     // 새로운 소리 파일이 추가될 때마다 여기에 추가
   ];
 
@@ -40,6 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const option = document.createElement("option");
     option.value = file;
     option.textContent = file
+      .replace("sounds/", "")
       .replace(".wav", "")
       .replace(/_/g, " ")
       .toUpperCase();
@@ -153,9 +154,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // 소리 선택 변경 시 저장
-  soundSelect.addEventListener("change", (event) => {
+  // 소리 선택 변경 시 저장 및 재생
+  soundSelect.addEventListener("change", async (event) => {
     const selectedSound = event.target.value;
+
+    try {
+      // 선택된 소리 재생
+      const audio = new Audio(chrome.runtime.getURL(selectedSound));
+      audio.volume = volumeSlider.value / 100;
+      await audio.play();
+    } catch (error) {
+      console.error("Sound playback failed:", error);
+    }
+
     chrome.storage.sync.set({ selectedSound: selectedSound }, () => {
       console.log(
         translations[languageSelect.value].selectedSoundSet +
