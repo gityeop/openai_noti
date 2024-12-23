@@ -60,8 +60,11 @@ chrome.storage.onChanged.addListener((changes, area) => {
     if (changes.selectedSound) {
       selectedSound = changes.selectedSound.newValue;
       if (audio) {
-        audio.src = chrome.runtime.getURL(`sounds/${selectedSound}`);
-        audio.load();
+        const newSoundURL = chrome.runtime.getURL(selectedSound);
+        if (audio.src !== newSoundURL) {
+          audio.src = newSoundURL;
+          audio.load();
+        }
       }
     }
     if (changes.tocEnabled) {
@@ -87,7 +90,7 @@ function playSound() {
   }
 
   if (!audio) {
-    const soundURL = chrome.runtime.getURL(`sounds/${selectedSound}`);
+    const soundURL = chrome.runtime.getURL(selectedSound);
     audio = new Audio(soundURL);
     audio.volume = volume;
     audio.addEventListener("ended", () => {
@@ -96,18 +99,34 @@ function playSound() {
   } else {
     audio.volume = volume;
     // Update src if the sound file has changed
-    const newSoundURL = chrome.runtime.getURL(`sounds/${selectedSound}`);
+    const newSoundURL = chrome.runtime.getURL(selectedSound);
     if (audio.src !== newSoundURL) {
       audio.src = newSoundURL;
       audio.load();
     }
   }
 
+  console.log("Attempting to play audio:", {
+    src: audio.src,
+    readyState: audio.readyState,
+    paused: audio.paused,
+    volume: audio.volume,
+    selectedSound: selectedSound,
+  });
+
   audio
     .play()
-    .then(() => {})
+    .then(() => {
+      console.log("Audio played successfully");
+    })
     .catch((error) => {
-      console.error("Error playing audio:", error);
+      console.error("Error playing audio:", {
+        error: error.message,
+        name: error.name,
+        readyState: audio.readyState,
+        networkState: audio.networkState,
+        src: audio.src,
+      });
     });
 }
 
