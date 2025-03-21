@@ -171,15 +171,78 @@ function createShowTOCButton() {
     return;
   }
   showTOCButton = document.createElement("button");
-  showTOCButton.textContent = "🙋‍♂️";
+
+  // uc0acuc774ub4dcubc14 uc544uc774ucf58 ucee8ud14cuc774ub108 uc0dduc131
+  const iconContainer = document.createElement("div");
+  iconContainer.style.width = "26px";
+  iconContainer.style.height = "26px";
+  iconContainer.style.position = "relative";
+  iconContainer.style.display = "flex";
+  iconContainer.style.alignItems = "center";
+  iconContainer.style.justifyContent = "center";
+
+  // uc67cucabd uc218uc9c1uc120 uc0dduc131
+  const verticalLine = document.createElement("div");
+  verticalLine.style.width = "3px"; // 2pxuc5d0uc11c 3pxub85c ub450uaecduac8c uc870uc815
+  verticalLine.style.height = "18px";
+  verticalLine.style.backgroundColor = "#666";
+  verticalLine.style.position = "absolute";
+  verticalLine.style.left = "6px";
+  verticalLine.style.borderRadius = "1.5px";
+
+  // ud654uc0b4ud45c uc0dduc131 (>)
+  const arrowContainer = document.createElement("div");
+  arrowContainer.style.position = "absolute";
+  arrowContainer.style.width = "10px";
+  arrowContainer.style.height = "14px";
+  arrowContainer.style.right = "4px";
+  arrowContainer.style.display = "flex";
+  arrowContainer.style.alignItems = "center";
+  arrowContainer.style.justifyContent = "center";
+
+  // ud654uc0b4ud45c uc0c1uc120
+  const arrowTop = document.createElement("div");
+  arrowTop.style.position = "absolute";
+  arrowTop.style.width = "10px";
+  arrowTop.style.height = "3px"; // 2pxuc5d0uc11c 3pxub85c ub450uaecduac8c uc870uc815
+  arrowTop.style.backgroundColor = "#666";
+  arrowTop.style.top = "5px";
+  arrowTop.style.transform = "rotate(45deg)";
+  arrowTop.style.transformOrigin = "left center";
+  arrowTop.style.borderRadius = "1.5px";
+
+  // ud654uc0b4ud45c ud558uc120
+  const arrowBottom = document.createElement("div");
+  arrowBottom.style.position = "absolute";
+  arrowBottom.style.width = "10px";
+  arrowBottom.style.height = "3px"; // 2pxuc5d0uc11c 3pxub85c ub450uaecduac8c uc870uc815
+  arrowBottom.style.backgroundColor = "#666";
+  arrowBottom.style.bottom = "5px";
+  arrowBottom.style.transform = "rotate(-45deg)";
+  arrowBottom.style.transformOrigin = "left center";
+  arrowBottom.style.borderRadius = "1.5px";
+
+  arrowContainer.appendChild(arrowTop);
+  arrowContainer.appendChild(arrowBottom);
+
+  iconContainer.appendChild(verticalLine);
+  iconContainer.appendChild(arrowContainer);
+  showTOCButton.appendChild(iconContainer);
+
   showTOCButton.style.position = "fixed";
-  showTOCButton.style.top = "65px"; // 필요에 따라 조정
-  showTOCButton.style.right = "0px"; // 필요에 따라 조정
+  showTOCButton.style.top = "65px";
+  showTOCButton.style.right = "0px";
   showTOCButton.style.zIndex = "1000";
-  showTOCButton.style.display = "none"; // 초기에는 숨김
-  showTOCButton.style.borderTopLeftRadius = "10px"; // 왼쪽 위 모서리
-  showTOCButton.style.borderBottomLeftRadius = "10px"; // 왼쪽 아래 모서리
-  showTOCButton.style.fontSize = "15px";
+  showTOCButton.style.display = "none";
+  showTOCButton.style.borderTopLeftRadius = "10px";
+  showTOCButton.style.borderBottomLeftRadius = "10px";
+  showTOCButton.style.backgroundColor = "var(--toc-bg-color, #f7f7f8)";
+  showTOCButton.style.border = "1px solid var(--toc-border-color, #e5e5e5)";
+  showTOCButton.style.borderRight = "none";
+  showTOCButton.style.padding = "5px 8px";
+  showTOCButton.style.cursor = "pointer";
+  showTOCButton.style.boxShadow = "-2px 2px 5px rgba(0, 0, 0, 0.1)";
+
   showTOCButton.addEventListener("click", () => {
     showTOC();
     showTOCButton.style.display = "none";
@@ -256,13 +319,81 @@ function createTOC() {
 
   // 'Hide TOC' 버튼 추가
   const hideButton = document.createElement("button");
-  hideButton.textContent = "🫣";
+
+  // uc0acuc774ub4dcubc14 uc544uc774ucf58 ucee8ud14cuc774ub108 uc0dduc131 (uc228uae30uae30 ubc84ud2bcuc6a9)
+  const hideIconContainer = document.createElement("div");
+  hideIconContainer.style.width = "20px";
+  hideIconContainer.style.height = "20px";
+  hideIconContainer.style.position = "relative";
+  hideIconContainer.style.display = "flex";
+  hideIconContainer.style.alignItems = "center";
+  hideIconContainer.style.justifyContent = "center";
+
+  // uc67cucabd uc218uc9c1uc120 uc0dduc131
+  const hideVerticalLine = document.createElement("div");
+  hideVerticalLine.style.width = "3px"; // 2pxuc5d0uc11c 3pxub85c ub450uaecduac8c uc870uc815
+  hideVerticalLine.style.height = "12px";
+  hideVerticalLine.style.backgroundColor = "#666";
+  hideVerticalLine.style.position = "absolute";
+  hideVerticalLine.style.left = "5px";
+  hideVerticalLine.style.borderRadius = "1.5px"; // 1pxuc5d0uc11c 1.5pxub85c ub450uaecduac8c uc870uc815
+
+  // ud654uc0b4ud45c uc0dduc131 (<)
+  const hideArrowContainer = document.createElement("div");
+  hideArrowContainer.style.position = "absolute";
+  hideArrowContainer.style.width = "8px";
+  hideArrowContainer.style.height = "12px";
+  hideArrowContainer.style.right = "3px";
+  hideArrowContainer.style.display = "flex";
+  hideArrowContainer.style.alignItems = "center";
+  hideArrowContainer.style.justifyContent = "center";
+
+  // ud654uc0b4ud45c uc0c1uc120
+  const hideArrowTop = document.createElement("div");
+  hideArrowTop.style.position = "absolute";
+  hideArrowTop.style.width = "8px";
+  hideArrowTop.style.height = "3px"; // 2pxuc5d0uc11c 3pxub85c ub450uaecduac8c uc870uc815
+  hideArrowTop.style.backgroundColor = "#666";
+  hideArrowTop.style.top = "4px";
+  hideArrowTop.style.transform = "rotate(-45deg)";
+  hideArrowTop.style.transformOrigin = "right center";
+  hideArrowTop.style.borderRadius = "1.5px"; // 1pxuc5d0uc11c 1.5pxub85c ub450uaecduac8c uc870uc815
+
+  // ud654uc0b4ud45c ud558uc120
+  const hideArrowBottom = document.createElement("div");
+  hideArrowBottom.style.position = "absolute";
+  hideArrowBottom.style.width = "8px";
+  hideArrowBottom.style.height = "3px"; // 2pxuc5d0uc11c 3pxub85c ub450uaecduac8c uc870uc815
+  hideArrowBottom.style.backgroundColor = "#666";
+  hideArrowBottom.style.bottom = "4px";
+  hideArrowBottom.style.transform = "rotate(45deg)";
+  hideArrowBottom.style.transformOrigin = "right center";
+  hideArrowBottom.style.borderRadius = "1.5px"; // 1pxuc5d0uc11c 1.5pxub85c ub450uaecduac8c uc870uc815
+
+  hideArrowContainer.appendChild(hideArrowTop);
+  hideArrowContainer.appendChild(hideArrowBottom);
+
+  hideIconContainer.appendChild(hideVerticalLine);
+  hideIconContainer.appendChild(hideArrowContainer);
+  hideButton.appendChild(hideIconContainer);
+
   hideButton.style.cursor = "pointer";
-  hideButton.style.borderRadius = "8px";
-  hideButton.style.fontSize = "15px";
   hideButton.style.backgroundColor = "transparent";
   hideButton.style.border = "none";
-  hideButton.style.padding = "2px 5px";
+  hideButton.style.padding = "3px";
+  hideButton.style.display = "flex";
+  hideButton.style.alignItems = "center";
+  hideButton.style.justifyContent = "center";
+  hideButton.style.transition = "opacity 0.2s ease";
+
+  // 호버 효과 추가
+  hideButton.addEventListener("mouseover", () => {
+    hideButton.style.opacity = "0.8";
+  });
+
+  hideButton.addEventListener("mouseout", () => {
+    hideButton.style.opacity = "1";
+  });
 
   hideButton.addEventListener("click", () => {
     hideTOC();
@@ -397,24 +528,54 @@ function updateTOCStyle(isDarkMode) {
   // 'Hide TOC' 버튼 스타일 업데이트
   const hideButton = tocContainer.querySelector("button");
   if (hideButton) {
-    hideButton.style.backgroundColor = isDarkMode ? "#333333" : "#f0f0f0";
-    hideButton.style.color = isDarkMode ? "#ffffff" : "#333333";
-    hideButton.style.border = isDarkMode
-      ? "1px solid #555555"
-      : "1px solid #cccccc";
-    hideButton.style.padding = "5px 10px";
+    hideButton.style.backgroundColor = "transparent";
+    hideButton.style.border = "none";
+    hideButton.style.padding = "3px";
     hideButton.style.cursor = "pointer";
+
+    // ud654uc0b4ud45c uc218uc9c1uc120 ubc0f ud654uc0b4ud45c uc0c9uc0c1 uc5c5ub370uc774ud2b8
+    const verticalLine = hideButton.querySelector("div > div:first-child");
+    const arrowContainer = hideButton.querySelector("div > div:last-child");
+
+    if (verticalLine && arrowContainer) {
+      const arrowColor = isDarkMode ? "#ffffff" : "#666666";
+      verticalLine.style.backgroundColor = arrowColor;
+
+      const arrowTop = arrowContainer.querySelector("div:first-child");
+      const arrowBottom = arrowContainer.querySelector("div:last-child");
+
+      if (arrowTop && arrowBottom) {
+        arrowTop.style.backgroundColor = arrowColor;
+        arrowBottom.style.backgroundColor = arrowColor;
+      }
+    }
   }
 
   // 'Show TOC' 버튼 스타일 업데이트
   if (showTOCButton) {
     showTOCButton.style.backgroundColor = isDarkMode ? "#333333" : "#f0f0f0";
-    showTOCButton.style.color = isDarkMode ? "#ffffff" : "#333333";
     showTOCButton.style.border = isDarkMode
       ? "1px solid #555555"
       : "1px solid #cccccc";
-    showTOCButton.style.padding = "5px 10px";
+    showTOCButton.style.borderRight = "none";
     showTOCButton.style.cursor = "pointer";
+
+    // ud654uc0b4ud45c uc0dduc131 uc0c1uc120 uc218uc9c1uc120 uc0dduc131
+    const arrowLine = showTOCButton.querySelector("div > div:first-child");
+    const arrowContainer = showTOCButton.querySelector("div > div:last-child");
+
+    if (arrowLine && arrowContainer) {
+      const arrowColor = isDarkMode ? "#ffffff" : "#666666";
+      arrowLine.style.backgroundColor = arrowColor;
+
+      const arrowTop = arrowContainer.querySelector("div:first-child");
+      const arrowBottom = arrowContainer.querySelector("div:last-child");
+
+      if (arrowTop && arrowBottom) {
+        arrowTop.style.backgroundColor = arrowColor;
+        arrowBottom.style.backgroundColor = arrowColor;
+      }
+    }
   }
 }
 
