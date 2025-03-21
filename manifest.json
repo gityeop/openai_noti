@@ -22,7 +22,7 @@
   "host_permissions": ["https://chatgpt.com/*"],
   "web_accessible_resources": [
     {
-      "resources": ["sounds/*.wav"],
+      "resources": ["sounds/*.wav", "icons/*.svg"],
       "matches": ["https://chatgpt.com/*"]
     }
   ]

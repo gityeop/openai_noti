@@ -480,13 +480,13 @@ function updateTOC() {
         userQuestionCount++;
         const questionText = contentElement.textContent.trim();
 
-        // uc0acuc6a9 uac00ub2a5ud55c ucd5cub300 ud14duc2a4ud2b8 uae38uc774 uacc4uc0b0 (TOC ub108ube44uc5d0 ub530ub77c ubcc0uacbd)
-        const maxChars = Math.floor(tocWidth / 10); // ub300ub7b5 10pxub2f9 1uae00uc790ub85c uacc4uc0b0
+        // 사용 가능한 최대 텍스트 길이 계산 (TOC 너비에 따라 변경)
+        const maxChars = Math.floor(tocWidth / 10); // 대략 10px당 1글자로 계산
 
-        // ud56dubaa9uc758 uace0uc720 ID uc0dduc131 (ud398uc774uc9c0 URLuacfc uc778ub371uc2a4 uacb0ud569)
+        // 항목의 고유 ID 생성 (페이지 URL과 인덱스 결합)
         const itemId = `${window.location.pathname}-${index}`;
 
-        // uc0acuc6a9uc790 uc815uc758 uc774ub984uc774 uc788ub294uc9c0 ud655uc778
+        // 사용자 정의 이름이 있는지 확인
         const customName = customTOCNames[itemId];
 
         let displayText = customName || questionText;
@@ -511,7 +511,7 @@ function updateTOC() {
         tocLink.style.overflow = "hidden";
         tocLink.style.textOverflow = "ellipsis";
         tocLink.style.display = "block";
-        tocLink.style.paddingRight = "25px"; // uc5f0ud544 uc544uc774ucf58uc744 uc704ud55c uacf5uac04 ud655ubcf4
+        tocLink.style.paddingRight = "25px"; // 연필 아이콘을 위한 공간 확보
 
         tocLink.addEventListener("click", (e) => {
           e.preventDefault();
@@ -521,19 +521,27 @@ function updateTOC() {
           });
         });
 
-        // uc5f0ud544 uc544uc774ucf58 uc0dduc131
-        const editIcon = document.createElement("span");
-        editIcon.textContent = "✏️";
+        // 연필 아이콘 생성 (SVG 파일 사용)
+        const editIcon = document.createElement("div");
+
+        // SVG 파일을 img 태그로 불러오기
+        const imgElement = document.createElement("img");
+        imgElement.src = chrome.runtime.getURL("icons/edit.svg");
+        imgElement.style.width = "16px";
+        imgElement.style.height = "16px";
+        imgElement.style.opacity = "0.6"; // 연한 회색 효과를 위해 투명도 조절
+        imgElement.style.filter = "grayscale(100%)"; // 흑백 필터 적용
+
+        editIcon.appendChild(imgElement);
         editIcon.style.position = "absolute";
         editIcon.style.right = "2px";
         editIcon.style.top = "50%";
         editIcon.style.transform = "translateY(-50%)";
         editIcon.style.cursor = "pointer";
-        editIcon.style.fontSize = "12px";
-        editIcon.style.opacity = "0"; // ucd08uae30uc5d0ub294 uc228uae40
+        editIcon.style.opacity = "0";
         editIcon.style.transition = "opacity 0.2s ease";
 
-        // ud56dubaa9uc5d0 ud638ubc84 uc2dc uc5f0ud544 uc544uc774ucf58 ud45cuc2dc
+        // 항목에 호버 시 연필 아이콘 표시
         tocItem.addEventListener("mouseenter", () => {
           editIcon.style.opacity = "1";
         });
@@ -542,29 +550,99 @@ function updateTOC() {
           editIcon.style.opacity = "0";
         });
 
-        // uc5f0ud544 uc544uc774ucf58 ud074ub9ad uc2dc uc774ub984 uc218uc815 uae30ub2a5
-        editIcon.addEventListener("click", (e) => {
-          e.stopPropagation(); // ud074ub9ad uc774ubca4ud2b8 uc804ud30c ubc29uc9c0
+        // 항목 수정 상태 관리 변수
+        let isEditing = false;
 
-          // ud604uc7ac ud14duc2a4ud2b8 (uc0acuc6a9uc790 uc815uc758 uc774ub984 ub610ub294 uc6d0ubcf8 ud14duc2a4ud2b8)
+        // 연필 아이콘 클릭 시 인라인 편집 기능
+        editIcon.addEventListener("click", (e) => {
+          e.stopPropagation();
+
+          if (isEditing) return; // 이미 편집 중이면 무시
+          isEditing = true;
+
+          // 기존 텍스트 저장
           const currentName = customTOCNames[itemId] || questionText;
 
-          // ud504ub86cud504ud2b8ub85c uc0c8 uc774ub984 uc785ub825ubc1buae30
-          const newName = prompt(
-            translations[selectedLanguage].editItemName || "Edit item name:",
-            currentName,
-          );
+          // 기존 텍스트 링크 숨기기
+          tocLink.style.display = "none";
 
-          if (newName !== null && newName.trim() !== "") {
-            // uc0c8 uc774ub984 uc800uc7a5
-            customTOCNames[itemId] = newName.trim();
+          // 인라인 편집을 위한 입력 요소 생성
+          const inputElement = document.createElement("input");
+          inputElement.type = "text";
+          inputElement.value = currentName;
+          inputElement.style.width = "90%";
+          inputElement.style.border = "1px solid #ccc";
+          inputElement.style.borderRadius = "4px";
+          inputElement.style.padding = "2px 5px";
+          inputElement.style.fontSize = "12px";
+          inputElement.style.outline = "none";
 
-            // uc2a4ud1a0ub9acuc9c0uc5d0 uc800uc7a5
-            chrome.storage.sync.set({ customTOCNames: customTOCNames });
+          // 에디트 아이콘 숨기기
+          editIcon.style.display = "none";
 
-            // TOC uc5c5ub370uc774ud2b8
-            updateTOC();
+          // 클릭 이벤트 막기
+          inputElement.addEventListener("click", (e) => {
+            e.stopPropagation();
+          });
+
+          // 엔터 키 처리
+          inputElement.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+              completeEdit();
+            } else if (e.key === "Escape") {
+              cancelEdit();
+            }
+          });
+
+          // 포커스 잃을 때 편집 완료
+          inputElement.addEventListener("blur", () => {
+            // uc57duac04uc758 uc9c0uc5f0uc744 uc8fcuc5b4 Enter ud0a4 uc774ubca4ud2b8uac00 uba3cuc800 ucc98ub9acub418ub3c4ub85d ud568
+            setTimeout(() => {
+              if (isEditing) {
+                completeEdit();
+              }
+            }, 100);
+          });
+
+          // 편집 완료 함수
+          function completeEdit() {
+            if (!isEditing) return; // uc774ubbf8 ud3b8uc9d1uc774 uc885ub8ccub418uc5c8ub2e4uba74 uc544ubb34 uac83ub3c4 ud558uc9c0 uc54auc74c
+
+            const newName = inputElement.value.trim();
+            if (newName !== "" && newName !== currentName) {
+              // uc0c8 uc774ub984 uc800uc7a5
+              customTOCNames[itemId] = newName;
+
+              // uc2a4ud1a0ub9acuc9c0uc5d0 uc800uc7a5
+              chrome.storage.sync.set({ customTOCNames: customTOCNames });
+
+              // TOC uc5c5ub370uc774ud2b8
+              isEditing = false;
+              updateTOC();
+            } else {
+              cancelEdit();
+            }
           }
+
+          // 편집 취소 함수
+          function cancelEdit() {
+            if (!isEditing) return; // uc774ubbf8 ud3b8uc9d1uc774 uc885ub8ccub418uc5c8ub2e4uba74 uc544ubb34 uac83ub3c4 ud558uc9c0 uc54auc74c
+
+            tocLink.style.display = "block";
+
+            // uc694uc18cuac00 uc5ecuc804ud788 DOMuc5d0 uc874uc7acud558ub294uc9c0 ud655uc778
+            if (inputElement.parentNode) {
+              inputElement.remove();
+            }
+
+            editIcon.style.display = "block";
+            isEditing = false;
+          }
+
+          // 입력 요소 추가
+          tocItem.insertBefore(inputElement, tocLink);
+          inputElement.focus();
+          inputElement.select();
         });
 
         tocItem.appendChild(tocLink);
@@ -580,7 +658,7 @@ function updateTOC() {
       tocContainer.style.display = "none";
     }
   } else {
-    tocContainer.style.display = "none"; // uc9c8ubb38uc774 uc5c6uc744 ub54c TOC uc228uae40
+    tocContainer.style.display = "none"; // 질문이 없을 때 TOC 숨김
   }
   updateTOCStyle(isDarkMode);
 }
@@ -717,46 +795,39 @@ if (notificationTargetNode) {
 // Listen for messages from the extension's background script or popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "updateSettings") {
-    if (message.volume !== undefined) {
-      volume = message.volume / 100;
-    }
-    if (message.soundEnabled !== undefined) {
-      soundEnabled = message.soundEnabled;
-    }
-    if (message.selectedSound !== undefined) {
-      selectedSound = message.selectedSound;
-    }
-    if (message.tocEnabled !== undefined) {
-      const tocEnabledChanged = tocEnabled !== message.tocEnabled;
-      tocEnabled = message.tocEnabled;
+    const { tocEnabled: newTocEnabled, tocVisible: newTocVisible } = message;
+    console.log("Received settings update:", { newTocEnabled, newTocVisible });
 
-      if (tocEnabledChanged) {
-        if (tocEnabled) {
-          if (!tocContainer) {
-            waitForMainAndInitializeTOC();
-          } else {
-            showTOC();
-            if (showTOCButton) {
-              showTOCButton.style.display = "none";
-            }
-            tocVisible = true;
-          }
-        } else {
-          if (tocContainer) {
-            tocContainer.style.display = "none";
-          }
-          if (showTOCButton) {
-            showTOCButton.style.display = "none";
-          }
+    const tocEnabledChanged = tocEnabled !== newTocEnabled;
+    const tocVisibleChanged = tocVisible !== newTocVisible;
+
+    tocEnabled = newTocEnabled;
+    tocVisible = newTocVisible;
+
+    if (tocEnabledChanged) {
+      if (tocEnabled) {
+        createTOCIfNotExists();
+        if (tocVisible) {
+          showTOC();
         }
+      } else {
+        hideTOC();
       }
-    }
-    if (message.selectedLanguage !== undefined) {
-      selectedLanguage = message.selectedLanguage;
-      updateTOC(); // 언어 변경 시 TOC 업데이트
+    } else if (tocVisibleChanged && tocEnabled) {
+      if (tocVisible) {
+        showTOC();
+      } else {
+        hideTOC();
+      }
     }
 
     sendResponse({ status: "Settings updated" });
   }
   return true; // Indicate async response
 });
+
+function createTOCIfNotExists() {
+  if (!tocContainer) {
+    createTOC();
+  }
+}
