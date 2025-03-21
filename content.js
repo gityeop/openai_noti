@@ -10,6 +10,7 @@ let showTOCButton = null;
 let lastUrl = window.location.href; // For detecting URL changes
 let tocVisible = true; // TOC의 가시성 상태를 추적
 let selectedLanguage = "en"; // 기본값
+let tocWidth = 300; // 초기 TOC 너비
 
 // Load initial settings
 
@@ -163,6 +164,7 @@ function initializeTOC() {
   // Listen for window resize to adjust TOC position
   window.addEventListener("resize", onWindowResize);
 }
+
 // 'Show TOC' 버튼을 생성하는 함수 추가
 function createShowTOCButton() {
   if (showTOCButton) {
@@ -186,6 +188,7 @@ function createShowTOCButton() {
 
   document.body.appendChild(showTOCButton);
 }
+
 function injectAnimationStyles() {
   const style = document.createElement("style");
   style.innerHTML = `
@@ -213,7 +216,7 @@ function injectAnimationStyles() {
   document.head.appendChild(style);
 }
 injectAnimationStyles();
-// Create TOC container
+
 function createTOC() {
   if (tocContainer) {
     return; // TOC already exists
@@ -222,55 +225,91 @@ function createTOC() {
   tocContainer = document.createElement("div");
   tocContainer.id = "chatnoti-toc";
   tocContainer.style.position = "fixed";
-  tocContainer.style.top = "56px";
-  tocContainer.style.left = calculateLeftPosition() + "px";
-  tocContainer.style.width = "160px";
+  tocContainer.style.top = "70px";
+  tocContainer.style.right = "10px";
+  tocContainer.style.width = tocWidth + "px";
   tocContainer.style.maxHeight = "80vh";
   tocContainer.style.overflowY = "auto";
-  tocContainer.style.borderRadius = "8px";
-  tocContainer.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.1)";
   tocContainer.style.padding = "10px";
-  tocContainer.style.zIndex = "1000";
-  tocContainer.style.fontSize = "12px";
-  tocContainer.style.transform = "translateX(100%)"; // 초기 위치를 화면 밖으로 설정
-  tocContainer.style.transition = "transform 0.3s ease-in-out"; // 트랜지션 추가
+  tocContainer.style.boxSizing = "border-box";
+  tocContainer.style.borderRadius = "5px";
+  tocContainer.style.zIndex = "999";
+  tocContainer.style.display = "none";
+  tocContainer.style.transition = "all 0.3s ease";
+  tocContainer.style.boxShadow = "0 2px 10px rgba(0, 0, 0, 0.1)";
 
-  // Apply styles based on system mode
-  updateTOCStyle(isDarkMode);
   const tocHeader = document.createElement("div");
   tocHeader.style.display = "flex";
-  tocHeader.style.alignItems = "center";
   tocHeader.style.justifyContent = "space-between";
+  tocHeader.style.alignItems = "center";
   tocHeader.style.marginBottom = "10px";
 
-  const tocTitle = document.createElement("div");
+  const tocTitle = document.createElement("h3");
   tocTitle.textContent = translations[selectedLanguage].tableOfContents;
-  tocTitle.style.fontWeight = "bold";
+  tocTitle.style.margin = "0";
+  tocTitle.style.padding = "0";
 
-  // 'Hide TOC' 버튼 추가
-  const hideButton = document.createElement("button");
-  hideButton.textContent = "🫣";
-  hideButton.style.cursor = "pointer";
-  hideButton.style.borderRadius = "8px";
-  hideButton.style.fontSize = "15px";
-
-  hideButton.addEventListener("click", () => {
+  const tocCloseButton = document.createElement("button");
+  tocCloseButton.textContent = "×";
+  tocCloseButton.style.background = "none";
+  tocCloseButton.style.border = "none";
+  tocCloseButton.style.cursor = "pointer";
+  tocCloseButton.style.fontSize = "20px";
+  tocCloseButton.style.padding = "0";
+  tocCloseButton.style.lineHeight = "1";
+  tocCloseButton.addEventListener("click", () => {
     hideTOC();
     showTOCButton.style.display = "block";
-    tocVisible = false; // TOC 가시성 상태 업데이트
+    tocVisible = false;
   });
-  tocHeader.appendChild(tocTitle);
-  tocHeader.appendChild(hideButton);
 
+  tocHeader.appendChild(tocTitle);
+  tocHeader.appendChild(tocCloseButton);
   tocContainer.appendChild(tocHeader);
 
   const tocList = document.createElement("ul");
-  tocList.style.listStyleType = "none";
-  tocList.style.padding = "0";
+  tocList.style.listStyleType = "decimal";
+  tocList.style.paddingLeft = "20px";
   tocList.style.margin = "0";
   tocContainer.appendChild(tocList);
 
+  const tocResizer = document.createElement("div");
+  tocResizer.id = "toc-resizer";
+  tocResizer.style.position = "absolute";
+  tocResizer.style.left = "0";
+  tocResizer.style.top = "0";
+  tocResizer.style.width = "5px";
+  tocResizer.style.height = "100%";
+  tocResizer.style.cursor = "ew-resize";
+  tocResizer.style.backgroundColor = "transparent";
+
+  let startX, startWidth;
+
+  tocResizer.addEventListener("mousedown", function (e) {
+    startX = e.clientX;
+    startWidth = parseInt(tocContainer.style.width);
+    document.addEventListener("mousemove", resizing);
+    document.addEventListener("mouseup", stopResizing);
+  });
+
+  function resizing(e) {
+    const newWidth = startWidth - (e.clientX - startX);
+    if (newWidth > 150 && newWidth < 500) {
+      tocWidth = newWidth;
+      tocContainer.style.width = newWidth + "px";
+      updateTOC();
+    }
+  }
+
+  function stopResizing() {
+    document.removeEventListener("mousemove", resizing);
+    document.removeEventListener("mouseup", stopResizing);
+  }
+
+  tocContainer.appendChild(tocResizer);
+
   document.body.appendChild(tocContainer);
+  updateTOC();
 }
 
 function showTOC() {
@@ -291,10 +330,11 @@ function hideTOC() {
   function onAnimationEnd() {
     tocContainer.style.display = "none";
     tocContainer.style.transform = "translateX(100%)";
-    tocContainer.style.opacity = "0"; // 투명도 초기화
+    tocContainer.style.opacity = "0";
     tocContainer.removeEventListener("animationend", onAnimationEnd);
   }
 }
+
 // Window resize handler
 function onWindowResize() {
   if (tocContainer) {
@@ -309,27 +349,26 @@ function updateTOCStyle(isDarkMode) {
   }
 
   if (isDarkMode) {
-    tocContainer.style.backgroundColor = "#1e1e1e"; // Dark mode background
-    tocContainer.style.color = "#ffffff"; // Dark mode text color
-    tocContainer.style.border = "1px solid #555555"; // Dark mode border
+    tocContainer.style.backgroundColor = "#1e1e1e";
+    tocContainer.style.color = "#ffffff";
+    tocContainer.style.border = "1px solid #555555";
   } else {
-    tocContainer.style.backgroundColor = "#ffffff"; // Light mode background
-    tocContainer.style.color = "#333333"; // Light mode text color
-    tocContainer.style.border = "1px solid #cccccc"; // Light mode border
+    tocContainer.style.backgroundColor = "#ffffff";
+    tocContainer.style.color = "#333333";
+    tocContainer.style.border = "1px solid #cccccc";
   }
 
-  // Update link styles
   const tocLinks = tocContainer.querySelectorAll("a");
   tocLinks.forEach((link) => {
     if (isDarkMode) {
-      link.style.color = "#4ea8de"; // Dark mode link color
+      link.style.color = "#4ea8de";
     } else {
-      link.style.color = "#007bff"; // Light mode link color
+      link.style.color = "#007bff";
     }
     link.style.textDecoration = "none";
     link.style.cursor = "pointer";
   });
-  // 'Hide TOC' 버튼 스타일
+
   const hideButton = tocContainer.querySelector("button");
   if (hideButton) {
     hideButton.style.backgroundColor = isDarkMode ? "#333333" : "#f0f0f0";
@@ -341,7 +380,6 @@ function updateTOCStyle(isDarkMode) {
     hideButton.style.cursor = "pointer";
   }
 
-  // 'Show TOC' 버튼 스타일
   if (showTOCButton) {
     showTOCButton.style.backgroundColor = isDarkMode ? "#333333" : "#f0f0f0";
     showTOCButton.style.color = isDarkMode ? "#ffffff" : "#333333";
@@ -367,23 +405,16 @@ function removeTOC() {
     showTOCButton.remove();
     showTOCButton = null;
   }
-  tocVisible = true; // TOC 가시성 상태 초기화
+  tocVisible = true;
   disconnectMainObserver();
 }
 
 // Update TOC content
 function updateTOC() {
-  if (!tocEnabled || !tocContainer) {
+  if (!tocContainer || !tocEnabled) {
     console.log(
       "TOC is not enabled or container does not exist, exiting updateTOC",
     );
-    return;
-  }
-
-  // Check if translations are available
-  if (typeof translations === "undefined" || !translations[selectedLanguage]) {
-    console.log("Translations not available yet, retrying in 100ms");
-    setTimeout(updateTOC, 100);
     return;
   }
 
@@ -393,34 +424,23 @@ function updateTOC() {
     return;
   }
 
-  tocList.innerHTML = ""; // Clear existing list
+  tocList.innerHTML = "";
 
-  // TOC 제목 업데이트
-  const tocTitleElement = tocContainer.querySelector("div:first-child > div");
-  if (tocTitleElement) {
-    try {
-      tocTitleElement.textContent =
-        translations[selectedLanguage].tableOfContents;
-    } catch (error) {
-      console.log("Error updating TOC title:", error);
-    }
-  }
-
-  // Select all article elements
   const articles = document.querySelectorAll("main article");
   let userQuestionCount = 0;
   articles.forEach((article, index) => {
-    // Assistant messages contain div.markdown
     const isAssistantMessage = article.querySelector("div.markdown");
     if (!isAssistantMessage) {
-      // User message content is in div.whitespace-pre-wrap
       const contentElement = article.querySelector("div.whitespace-pre-wrap");
       if (contentElement) {
         userQuestionCount++;
         const questionText = contentElement.textContent.trim();
+
+        const maxChars = Math.floor(tocWidth / 10);
+
         const shortText =
-          questionText.length > 15
-            ? questionText.substring(0, 15) + "..."
+          questionText.length > maxChars
+            ? questionText.substring(0, maxChars) + "..."
             : questionText;
 
         const tocItem = document.createElement("li");
@@ -429,9 +449,13 @@ function updateTOC() {
         const tocLink = document.createElement("a");
         tocLink.href = "#";
         tocLink.textContent = shortText;
-        tocLink.dataset.articleIndex = index; // Store index for reference
+        tocLink.dataset.articleIndex = index;
         tocLink.style.textDecoration = "none";
         tocLink.style.cursor = "pointer";
+        tocLink.style.display = "block";
+        tocLink.style.whiteSpace = "nowrap";
+        tocLink.style.overflow = "hidden";
+        tocLink.style.textOverflow = "ellipsis";
 
         tocLink.addEventListener("click", (e) => {
           e.preventDefault();
@@ -453,7 +477,7 @@ function updateTOC() {
       tocContainer.style.display = "none";
     }
   } else {
-    tocContainer.style.display = "none"; // 질문이 없을 때 TOC 숨김
+    tocContainer.style.display = "none";
   }
   updateTOCStyle(isDarkMode);
 }
@@ -466,7 +490,6 @@ function observeMainContainer() {
     return;
   }
 
-  // Disconnect previous observer if any
   if (mainObserver) {
     mainObserver.disconnect();
   }
@@ -488,18 +511,14 @@ function disconnectMainObserver() {
 
 // Function to wait for 'main' element and initialize TOC
 function waitForMainAndInitializeTOC() {
-  // console.log("Waiting for 'main' element to be available");
-
   if (document.querySelector("main")) {
-    // console.log("'main' element is already available");
     initializeTOC();
   } else {
     const bodyObserver = new MutationObserver((mutationsList, observer) => {
       for (const mutation of mutationsList) {
         if (mutation.type === "childList") {
           if (document.querySelector("main")) {
-            // console.log("'main' element added to the DOM");
-            observer.disconnect(); // Stop observing once 'main' is found
+            observer.disconnect();
             initializeTOC();
             break;
           }
@@ -508,7 +527,6 @@ function waitForMainAndInitializeTOC() {
     });
 
     bodyObserver.observe(document.body, { childList: true, subtree: true });
-    // console.log("Started observing document body for 'main' element");
   }
 }
 
@@ -518,13 +536,12 @@ function observeUrlChange() {
     if (window.location.href !== lastUrl) {
       lastUrl = window.location.href;
 
-      // Re-initialize TOC if enabled
       if (tocEnabled) {
         removeTOC();
         waitForMainAndInitializeTOC();
       }
     }
-  }, 1000); // Check every second
+  }, 1000);
 }
 
 // Answer generation status functions (updated)
@@ -551,17 +568,13 @@ let generating = false;
 const notificationObserverCallback = function (mutationsList, observer) {
   for (const mutation of mutationsList) {
     if (mutation.type === "childList") {
-      // console.log(
-      //   "Child list mutation detected (NotificationObserver):",
-      //   mutation
-      // );
       if (isGenerating()) {
         if (!generating) {
-          generating = true; // Answer is generating
+          generating = true;
         }
       } else if (generating && isCompleted()) {
-        generating = false; // Answer generation completed
-        playSound(); // Play notification sound
+        generating = false;
+        playSound();
       }
     }
   }
@@ -575,14 +588,3 @@ if (notificationTargetNode) {
   const config = { childList: true, subtree: true };
   notificationObserver.observe(notificationTargetNode, config);
 }
-
-// // Event listener for page load
-// window.addEventListener("load", () => {
-//   // Initialize TOC if enabled
-//   if (tocEnabled) {
-//     initializeTOC();
-//   }
-
-//   // Start observing URL changes
-//   observeUrlChange();
-// });
