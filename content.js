@@ -247,6 +247,7 @@ function createTOC() {
   tocHeader.style.alignItems = "center";
   tocHeader.style.justifyContent = "space-between";
   tocHeader.style.marginBottom = "10px";
+  tocHeader.style.marginLeft = "10px";
 
   const tocTitle = document.createElement("div");
   tocTitle.textContent = translations[selectedLanguage].tableOfContents;
@@ -486,7 +487,7 @@ function updateTOC() {
 
         const tocItem = document.createElement("li");
         tocItem.style.marginBottom = "5px";
-
+        tocItem.style.marginLeft = "10px";
         const tocLink = document.createElement("a");
         tocLink.href = "#";
         tocLink.textContent = shortText;
