@@ -252,6 +252,7 @@ function createTOC() {
   const tocTitle = document.createElement("div");
   tocTitle.textContent = translations[selectedLanguage].tableOfContents;
   tocTitle.style.fontWeight = "bold";
+  tocTitle.style.fontSize = "14px";
 
   // 'Hide TOC' 버튼 추가
   const hideButton = document.createElement("button");
@@ -288,7 +289,7 @@ function createTOC() {
   tocResizer.style.width = "5px";
   tocResizer.style.height = "100%";
   tocResizer.style.cursor = "ew-resize";
-  tocResizer.style.backgroundColor = "rgba(0, 0, 0, 0.1)";
+  tocResizer.style.backgroundColor = "rgba(0, 0, 0, 0.08)";
 
   let startX, startWidth;
 
