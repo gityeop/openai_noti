@@ -278,6 +278,7 @@ function createTOC() {
   tocList.style.listStyleType = "none";
   tocList.style.padding = "0";
   tocList.style.margin = "0";
+  tocList.style.marginLeft = "10px";
   tocContainer.appendChild(tocList);
 
   // 리사이저 추가 (가로 크기 조절 기능)
@@ -479,16 +480,27 @@ function updateTOC() {
         userQuestionCount++;
         const questionText = contentElement.textContent.trim();
 
-        // 질문 텍스트를 TOC에 표시할 수 있는 길이로 제한
-        const maxChars = Math.floor(tocWidth / 10); // 10px당 1자씩 계산
+        // uc0acuc6a9 uac00ub2a5ud55c ucd5cub300 ud14duc2a4ud2b8 uae38uc774 uacc4uc0b0 (TOC ub108ube44uc5d0 ub530ub77c ubcc0uacbd)
+        const maxChars = Math.floor(tocWidth / 10); // ub300ub7b5 10pxub2f9 1uae00uc790ub85c uacc4uc0b0
+
+        // ud56dubaa9uc758 uace0uc720 ID uc0dduc131 (ud398uc774uc9c0 URLuacfc uc778ub371uc2a4 uacb0ud569)
+        const itemId = `${window.location.pathname}-${index}`;
+
+        // uc0acuc6a9uc790 uc815uc758 uc774ub984uc774 uc788ub294uc9c0 ud655uc778
+        const customName = customTOCNames[itemId];
+
+        let displayText = customName || questionText;
         const shortText =
-          questionText.length > maxChars
-            ? questionText.substring(0, maxChars) + "..."
-            : questionText;
+          displayText.length > maxChars
+            ? displayText.substring(0, maxChars) + "..."
+            : displayText;
 
         const tocItem = document.createElement("li");
         tocItem.style.marginBottom = "5px";
-        tocItem.style.marginLeft = "10px";
+        tocItem.style.position = "relative";
+        tocItem.dataset.id = itemId;
+        tocItem.dataset.originalText = questionText;
+
         const tocLink = document.createElement("a");
         tocLink.href = "#";
         tocLink.textContent = shortText;
@@ -499,6 +511,7 @@ function updateTOC() {
         tocLink.style.overflow = "hidden";
         tocLink.style.textOverflow = "ellipsis";
         tocLink.style.display = "block";
+        tocLink.style.paddingRight = "25px"; // uc5f0ud544 uc544uc774ucf58uc744 uc704ud55c uacf5uac04 ud655ubcf4
 
         tocLink.addEventListener("click", (e) => {
           e.preventDefault();
@@ -508,7 +521,54 @@ function updateTOC() {
           });
         });
 
+        // uc5f0ud544 uc544uc774ucf58 uc0dduc131
+        const editIcon = document.createElement("span");
+        editIcon.textContent = "✏️";
+        editIcon.style.position = "absolute";
+        editIcon.style.right = "2px";
+        editIcon.style.top = "50%";
+        editIcon.style.transform = "translateY(-50%)";
+        editIcon.style.cursor = "pointer";
+        editIcon.style.fontSize = "12px";
+        editIcon.style.opacity = "0"; // ucd08uae30uc5d0ub294 uc228uae40
+        editIcon.style.transition = "opacity 0.2s ease";
+
+        // ud56dubaa9uc5d0 ud638ubc84 uc2dc uc5f0ud544 uc544uc774ucf58 ud45cuc2dc
+        tocItem.addEventListener("mouseenter", () => {
+          editIcon.style.opacity = "1";
+        });
+
+        tocItem.addEventListener("mouseleave", () => {
+          editIcon.style.opacity = "0";
+        });
+
+        // uc5f0ud544 uc544uc774ucf58 ud074ub9ad uc2dc uc774ub984 uc218uc815 uae30ub2a5
+        editIcon.addEventListener("click", (e) => {
+          e.stopPropagation(); // ud074ub9ad uc774ubca4ud2b8 uc804ud30c ubc29uc9c0
+
+          // ud604uc7ac ud14duc2a4ud2b8 (uc0acuc6a9uc790 uc815uc758 uc774ub984 ub610ub294 uc6d0ubcf8 ud14duc2a4ud2b8)
+          const currentName = customTOCNames[itemId] || questionText;
+
+          // ud504ub86cud504ud2b8ub85c uc0c8 uc774ub984 uc785ub825ubc1buae30
+          const newName = prompt(
+            translations[selectedLanguage].editItemName || "Edit item name:",
+            currentName,
+          );
+
+          if (newName !== null && newName.trim() !== "") {
+            // uc0c8 uc774ub984 uc800uc7a5
+            customTOCNames[itemId] = newName.trim();
+
+            // uc2a4ud1a0ub9acuc9c0uc5d0 uc800uc7a5
+            chrome.storage.sync.set({ customTOCNames: customTOCNames });
+
+            // TOC uc5c5ub370uc774ud2b8
+            updateTOC();
+          }
+        });
+
         tocItem.appendChild(tocLink);
+        tocItem.appendChild(editIcon);
         tocList.appendChild(tocItem);
       }
     }
@@ -520,10 +580,20 @@ function updateTOC() {
       tocContainer.style.display = "none";
     }
   } else {
-    tocContainer.style.display = "none"; // 질문이 없으면 TOC를 숨김
+    tocContainer.style.display = "none"; // uc9c8ubb38uc774 uc5c6uc744 ub54c TOC uc228uae40
   }
   updateTOCStyle(isDarkMode);
 }
+
+// ud56dubaa9 uc774ub984 uc800uc7a5uc744 uc704ud55c ubcc0uc218 ucd94uac00
+let customTOCNames = {};
+
+// uc800uc7a5ub41c uc0acuc6a9uc790 uc815uc758 ud56dubaa9 uc774ub984 ub85cub4dc
+chrome.storage.sync.get(["customTOCNames"], (result) => {
+  if (result.customTOCNames) {
+    customTOCNames = result.customTOCNames;
+  }
+});
 
 // Function to observe changes in the main content area
 let mainObserver = null;
