@@ -16,6 +16,7 @@ const translations = {
     tableOfContents: "Table of Contents",
     hideTOC: "🫣",
     showTOC: "🙋‍♂️",
+    photo: "Photo",
   },
   ko: {
     settingsTitle: "ChatNoti 설정",
@@ -32,6 +33,7 @@ const translations = {
     tableOfContents: "목차",
     hideTOC: "🫣",
     showTOC: "🙋‍♂️",
+    photo: "사진",
   },
   zh: {
     settingsTitle: "ChatNoti 设置",
@@ -48,6 +50,7 @@ const translations = {
     tableOfContents: "目录",
     hideTOC: "🫣",
     showTOC: "🙋‍♂️",
+    photo: "照片",
   },
   es: {
     settingsTitle: "Configuración de ChatNoti",
@@ -64,5 +67,6 @@ const translations = {
     tableOfContents: "Tabla de Contenidos",
     hideTOC: "🫣",
     showTOC: "🙋‍♂️",
+    photo: "Foto",
   },
 };

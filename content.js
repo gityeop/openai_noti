@@ -637,9 +637,29 @@ function updateTOC() {
     if (!isAssistantMessage) {
       // User message content is in div.whitespace-pre-wrap
       const contentElement = article.querySelector("div.whitespace-pre-wrap");
-      if (contentElement) {
+
+      // 이미지 검색 - 사용자가 제공한 정확한 HTML 구조 활용
+      const hasImage =
+        article.querySelector(
+          'button[aria-haspopup="dialog"] img[alt="업로드한 이미지"]',
+        ) !== null ||
+        article.querySelector("div.flex.w-full.flex-col.gap-1 img") !== null ||
+        article.querySelector(".overflow-hidden.rounded-lg img") !== null;
+
+      // 텍스트 내용과 이미지 상태 확인
+      const messageText = contentElement
+        ? contentElement.textContent.trim()
+        : "";
+      const isEmptyTextWithImage = messageText === "" && hasImage;
+
+      // 사용자 메시지가 있거나 이미지만 있는 경우 (둘 중 하나라도 있으면) 처리
+      if (contentElement || isEmptyTextWithImage) {
         userQuestionCount++;
-        const questionText = contentElement.textContent.trim();
+
+        // 표시할 텍스트 결정 (텍스트가 비었고 이미지가 있으면 '사진'으로 표시)
+        const displayQuestionText = isEmptyTextWithImage
+          ? translations[selectedLanguage]?.photo || "사진"
+          : messageText;
 
         // 사용 가능한 최대 텍스트 길이 계산 (TOC 너비에 따라 변경)
         const maxChars = Math.floor(tocWidth / 10); // 대략 10px당 1글자로 계산
@@ -650,7 +670,7 @@ function updateTOC() {
         // 사용자 정의 이름이 있는지 확인
         const customName = customTOCNames[itemId];
 
-        let displayText = customName || questionText;
+        let displayText = customName || displayQuestionText;
         const shortText =
           displayText.length > maxChars
             ? displayText.substring(0, maxChars) + "..."
@@ -660,7 +680,7 @@ function updateTOC() {
         tocItem.style.marginBottom = "5px";
         tocItem.style.position = "relative";
         tocItem.dataset.id = itemId;
-        tocItem.dataset.originalText = questionText;
+        tocItem.dataset.originalText = messageText;
 
         const tocLink = document.createElement("a");
         tocLink.href = "#";
@@ -676,10 +696,38 @@ function updateTOC() {
 
         tocLink.addEventListener("click", (e) => {
           e.preventDefault();
-          contentElement.scrollIntoView({
-            behavior: "smooth",
-            block: "center",
-          });
+          // 이미지만 있는 경우 이미지로 스크롤, 텍스트가 있는 경우 텍스트로 스크롤
+          if (contentElement) {
+            contentElement.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+            });
+          } else if (isEmptyTextWithImage) {
+            // 이미지 요소 찾기 및 스크롤
+            const imgElement =
+              article.querySelector('button[aria-haspopup="dialog"] img') ||
+              article.querySelector("div.flex.w-full.flex-col.gap-1 img") ||
+              article.querySelector(".overflow-hidden.rounded-lg img");
+
+            if (imgElement) {
+              imgElement.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+              });
+            } else {
+              // 이미지를 찾을 수 없으면 그냥 아티클 전체로 스크롤
+              article.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+              });
+            }
+          } else {
+            // 두 경우 모두 아닐 경우 (만일을 대비)
+            article.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+            });
+          }
         });
 
         // 연필 아이콘 생성 (SVG 파일 사용)
@@ -722,7 +770,7 @@ function updateTOC() {
           isEditing = true;
 
           // 기존 텍스트 저장
-          const currentName = customTOCNames[itemId] || questionText;
+          const currentName = customTOCNames[itemId] || displayQuestionText;
 
           // 기존 텍스트 링크 숨기기
           tocLink.style.display = "none";
