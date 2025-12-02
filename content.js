@@ -628,236 +628,258 @@ function updateTOC() {
     }
   }
 
-  // Select all article elements
-  const articles = document.querySelectorAll("main article");
+  // Select all article elements - more generic selector
+  const articles = document.querySelectorAll("article");
   let userQuestionCount = 0;
   articles.forEach((article, index) => {
-    // Assistant messages contain div.markdown
-    const isAssistantMessage = article.querySelector("div.markdown");
-    if (!isAssistantMessage) {
-      // User message content is in div.whitespace-pre-wrap
-      const contentElement = article.querySelector("div.whitespace-pre-wrap");
+    // Assistant messages often have a specific class or structure, but user messages are what we want.
+    // User messages usually don't have the 'markdown' class which is typical for assistant responses.
+    // However, structure changes frequently.
+    // Strategy: Look for the user message container.
 
-      // 이미지 검색 - 사용자가 제공한 정확한 HTML 구조 활용
-      const hasImage =
-        article.querySelector(
-          'button[aria-haspopup="dialog"] img[alt="업로드한 이미지"]',
-        ) !== null ||
-        article.querySelector("div.flex.w-full.flex-col.gap-1 img") !== null ||
-        article.querySelector(".overflow-hidden.rounded-lg img") !== null;
+    // Try to find the user message content.
+    // 1. Look for whitespace-pre-wrap (common for user text)
+    let contentElement = article.querySelector("div.whitespace-pre-wrap");
 
-      // 텍스트 내용과 이미지 상태 확인
-      const messageText = contentElement
-        ? contentElement.textContent.trim()
-        : "";
-      const isEmptyTextWithImage = messageText === "" && hasImage;
+    // 2. If not found, try to exclude assistant messages to infer it's a user message
+    const isAssistant =
+      article.querySelector(".markdown") ||
+      article.querySelector("[data-message-author-role='assistant']");
 
-      // 사용자 메시지가 있거나 이미지만 있는 경우 (둘 중 하나라도 있으면) 처리
-      if (contentElement || isEmptyTextWithImage) {
-        userQuestionCount++;
+    if (!contentElement && !isAssistant) {
+      // Fallback: try to find any div with text content that isn't empty
+      // This is risky, so we stick to known patterns or just the whitespace-pre-wrap for now.
+    }
 
-        // 표시할 텍스트 결정 (텍스트가 비었고 이미지가 있으면 '사진'으로 표시)
-        const displayQuestionText = isEmptyTextWithImage
-          ? translations[selectedLanguage]?.photo || "사진"
-          : messageText;
+    // Check for images
+    const hasImage =
+      article.querySelector('img[alt="업로드한 이미지"]') !== null ||
+      article.querySelector('img[src^="blob:"]') !== null || // Common for uploaded images
+      article.querySelector("div.flex.w-full.flex-col.gap-1 img") !== null ||
+      article.querySelector(".overflow-hidden.rounded-lg img") !== null;
 
-        // 사용 가능한 최대 텍스트 길이 계산 (TOC 너비에 따라 변경)
-        const maxChars = Math.floor(tocWidth / 10); // 대략 10px당 1글자로 계산
+    // 텍스트 내용과 이미지 상태 확인
+    const messageText = contentElement ? contentElement.textContent.trim() : "";
+    const isEmptyTextWithImage = messageText === "" && hasImage;
 
-        // 항목의 고유 ID 생성 (페이지 URL과 인덱스 결합)
-        const itemId = `${window.location.pathname}-${index}`;
+    // 사용자 메시지가 있거나 이미지만 있는 경우 (둘 중 하나라도 있으면) 처리
+    if (contentElement || isEmptyTextWithImage) {
+      userQuestionCount++;
 
-        // 사용자 정의 이름이 있는지 확인
-        const customName = customTOCNames[itemId];
+      // 표시할 텍스트 결정 (텍스트가 비었고 이미지가 있으면 '사진'으로 표시)
+      const displayQuestionText = isEmptyTextWithImage
+        ? translations[selectedLanguage]?.photo || "사진"
+        : messageText;
 
-        let displayText = customName || displayQuestionText;
-        const shortText =
-          displayText.length > maxChars
-            ? displayText.substring(0, maxChars) + "..."
-            : displayText;
+      // 사용 가능한 최대 텍스트 길이 계산 (TOC 너비에 따라 변경)
+      const maxChars = Math.floor(tocWidth / 10); // 대략 10px당 1글자로 계산
 
-        const tocItem = document.createElement("li");
-        tocItem.style.marginBottom = "5px";
-        tocItem.style.position = "relative";
-        tocItem.dataset.id = itemId;
-        tocItem.dataset.originalText = messageText;
+      // 항목의 고유 ID 생성 (페이지 URL과 인덱스 결합)
+      const itemId = `${window.location.pathname}-${index}`;
 
-        const tocLink = document.createElement("a");
-        tocLink.href = "#";
-        tocLink.textContent = shortText;
-        tocLink.dataset.articleIndex = index; // Store index for reference
-        tocLink.style.textDecoration = "none";
-        tocLink.style.cursor = "pointer";
-        tocLink.style.whiteSpace = "nowrap";
-        tocLink.style.overflow = "hidden";
-        tocLink.style.textOverflow = "ellipsis";
-        tocLink.style.display = "block";
-        tocLink.style.paddingRight = "25px"; // 연필 아이콘을 위한 공간 확보
+      // 사용자 정의 이름이 있는지 확인
+      const customName = customTOCNames[itemId];
 
-        tocLink.addEventListener("click", (e) => {
-          e.preventDefault();
-          // 이미지만 있는 경우 이미지로 스크롤, 텍스트가 있는 경우 텍스트로 스크롤
-          if (contentElement) {
-            contentElement.scrollIntoView({
+      let displayText = customName || displayQuestionText;
+      const shortText =
+        displayText.length > maxChars
+          ? displayText.substring(0, maxChars) + "..."
+          : displayText;
+
+      const tocItem = document.createElement("li");
+      tocItem.style.marginBottom = "5px";
+      tocItem.style.position = "relative";
+      tocItem.dataset.id = itemId;
+      tocItem.dataset.originalText = messageText;
+
+      const tocLink = document.createElement("a");
+      tocLink.href = "#";
+      tocLink.textContent = shortText;
+      tocLink.dataset.articleIndex = index; // Store index for reference
+      tocLink.style.textDecoration = "none";
+      tocLink.style.cursor = "pointer";
+      tocLink.style.whiteSpace = "nowrap";
+      tocLink.style.overflow = "hidden";
+      tocLink.style.textOverflow = "ellipsis";
+      tocLink.style.display = "block";
+      tocLink.style.paddingRight = "25px"; // 연필 아이콘을 위한 공간 확보
+
+      tocLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        // 이미지만 있는 경우 이미지로 스크롤, 텍스트가 있는 경우 텍스트로 스크롤
+        if (contentElement) {
+          contentElement.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        } else if (isEmptyTextWithImage) {
+          // 이미지 요소 찾기 및 스크롤
+          const imgElement =
+            article.querySelector('button[aria-haspopup="dialog"] img') ||
+            article.querySelector("div.flex.w-full.flex-col.gap-1 img") ||
+            article.querySelector(".overflow-hidden.rounded-lg img");
+
+          if (imgElement) {
+            imgElement.scrollIntoView({
               behavior: "smooth",
               block: "center",
             });
-          } else if (isEmptyTextWithImage) {
-            // 이미지 요소 찾기 및 스크롤
-            const imgElement =
-              article.querySelector('button[aria-haspopup="dialog"] img') ||
-              article.querySelector("div.flex.w-full.flex-col.gap-1 img") ||
-              article.querySelector(".overflow-hidden.rounded-lg img");
-
-            if (imgElement) {
-              imgElement.scrollIntoView({
-                behavior: "smooth",
-                block: "center",
-              });
-            } else {
-              // 이미지를 찾을 수 없으면 그냥 아티클 전체로 스크롤
-              article.scrollIntoView({
-                behavior: "smooth",
-                block: "center",
-              });
-            }
           } else {
-            // 두 경우 모두 아닐 경우 (만일을 대비)
+            // 이미지를 찾을 수 없으면 그냥 아티클 전체로 스크롤
             article.scrollIntoView({
               behavior: "smooth",
               block: "center",
             });
           }
-        });
-
-        // 연필 아이콘 생성 (SVG 파일 사용)
-        const editIcon = document.createElement("div");
-
-        // SVG 파일을 img 태그로 불러오기
-        const imgElement = document.createElement("img");
-        imgElement.src = chrome.runtime.getURL("icons/edit.svg");
-        imgElement.style.width = "16px";
-        imgElement.style.height = "16px";
-        imgElement.style.opacity = "0.6"; // 연한 회색 효과를 위해 투명도 조절
-        imgElement.style.filter = "grayscale(100%)"; // 흑백 필터 적용
-
-        editIcon.appendChild(imgElement);
-        editIcon.style.position = "absolute";
-        editIcon.style.right = "2px";
-        editIcon.style.top = "50%";
-        editIcon.style.transform = "translateY(-50%)";
-        editIcon.style.cursor = "pointer";
-        editIcon.style.opacity = "0";
-        editIcon.style.transition = "opacity 0.2s ease";
-
-        // 항목에 호버 시 연필 아이콘 표시
-        tocItem.addEventListener("mouseenter", () => {
-          editIcon.style.opacity = "1";
-        });
-
-        tocItem.addEventListener("mouseleave", () => {
-          editIcon.style.opacity = "0";
-        });
-
-        // 항목 수정 상태 관리 변수
-        let isEditing = false;
-
-        // 연필 아이콘 클릭 시 인라인 편집 기능
-        editIcon.addEventListener("click", (e) => {
-          e.stopPropagation();
-
-          if (isEditing) return; // 이미 편집 중이면 무시
-          isEditing = true;
-
-          // 기존 텍스트 저장
-          const currentName = customTOCNames[itemId] || displayQuestionText;
-
-          // 기존 텍스트 링크 숨기기
-          tocLink.style.display = "none";
-
-          // 인라인 편집을 위한 입력 요소 생성
-          const inputElement = document.createElement("input");
-          inputElement.type = "text";
-          inputElement.value = currentName;
-          inputElement.style.width = "90%";
-          inputElement.style.border = "1px solid #ccc";
-          inputElement.style.borderRadius = "4px";
-          inputElement.style.padding = "2px 5px";
-          inputElement.style.fontSize = "12px";
-          inputElement.style.outline = "none";
-
-          // 에디트 아이콘 숨기기
-          editIcon.style.display = "none";
-
-          // 클릭 이벤트 막기
-          inputElement.addEventListener("click", (e) => {
-            e.stopPropagation();
+        } else {
+          // 두 경우 모두 아닐 경우 (만일을 대비)
+          article.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
           });
+        }
+      });
 
-          // 엔터 키 처리
-          inputElement.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") {
-              completeEdit();
-            } else if (e.key === "Escape") {
-              cancelEdit();
-            }
-          });
+      // 연필 아이콘 생성 (SVG 파일 사용)
+      const editIcon = document.createElement("div");
 
-          // 포커스 잃을 때 편집 완료
-          inputElement.addEventListener("blur", () => {
-            // uc57duac04uc758 uc9c0uc5f0uc744 uc8fcuc5b4 Enter ud0a4 uc774ubca4ud2b8uac00 uba3cuc800 ucc98ub9acub418ub3c4ub85d ud568
-            setTimeout(() => {
-              if (isEditing) {
-                completeEdit();
-              }
-            }, 100);
-          });
-
-          // 편집 완료 함수
-          function completeEdit() {
-            if (!isEditing) return; // uc774ubbf8 ud3b8uc9d1uc774 uc885ub8ccub418uc5c8ub2e4uba74 uc544ubb34 uac83ub3c4 ud558uc9c0 uc54auc74c
-
-            const newName = inputElement.value.trim();
-            if (newName !== "" && newName !== currentName) {
-              // uc0c8 uc774ub984 uc800uc7a5
-              customTOCNames[itemId] = newName;
-
-              // uc2a4ud1a0ub9acuc9c0uc5d0 uc800uc7a5
-              chrome.storage.sync.set({ customTOCNames: customTOCNames });
-
-              // TOC uc5c5ub370uc774ud2b8
-              isEditing = false;
-              updateTOC();
-            } else {
-              cancelEdit();
-            }
-          }
-
-          // 편집 취소 함수
-          function cancelEdit() {
-            if (!isEditing) return; // uc774ubbf8 ud3b8uc9d1uc774 uc885ub8ccub418uc5c8ub2e4uba74 uc544ubb34 uac83ub3c4 ud558uc9c0 uc54auc74c
-
-            tocLink.style.display = "block";
-
-            // uc694uc18cuac00 uc5ecuc804ud788 DOMuc5d0 uc874uc7acud558ub294uc9c0 ud655uc778
-            if (inputElement.parentNode) {
-              inputElement.remove();
-            }
-
-            editIcon.style.display = "block";
-            isEditing = false;
-          }
-
-          // 입력 요소 추가
-          tocItem.insertBefore(inputElement, tocLink);
-          inputElement.focus();
-          inputElement.select();
-        });
-
-        tocItem.appendChild(tocLink);
-        tocItem.appendChild(editIcon);
-        tocList.appendChild(tocItem);
+      // SVG 파일을 img 태그로 불러오기
+      const imgElement = document.createElement("img");
+      try {
+        if (chrome.runtime && chrome.runtime.id) {
+          imgElement.src = chrome.runtime.getURL("icons/edit.svg");
+        } else {
+          throw new Error("Extension context invalidated");
+        }
+      } catch (e) {
+        console.log("Extension context invalidated, stopping observers.");
+        disconnectMainObserver();
+        if (typeof notificationObserver !== "undefined") {
+          notificationObserver.disconnect();
+        }
+        return; // Stop processing
       }
+      imgElement.style.width = "16px";
+      imgElement.style.height = "16px";
+      imgElement.style.opacity = "0.6"; // 연한 회색 효과를 위해 투명도 조절
+      imgElement.style.filter = "grayscale(100%)"; // 흑백 필터 적용
+
+      editIcon.appendChild(imgElement);
+      editIcon.style.position = "absolute";
+      editIcon.style.right = "2px";
+      editIcon.style.top = "50%";
+      editIcon.style.transform = "translateY(-50%)";
+      editIcon.style.cursor = "pointer";
+      editIcon.style.opacity = "0";
+      editIcon.style.transition = "opacity 0.2s ease";
+
+      // 항목에 호버 시 연필 아이콘 표시
+      tocItem.addEventListener("mouseenter", () => {
+        editIcon.style.opacity = "1";
+      });
+
+      tocItem.addEventListener("mouseleave", () => {
+        editIcon.style.opacity = "0";
+      });
+
+      // 항목 수정 상태 관리 변수
+      let isEditing = false;
+
+      // 연필 아이콘 클릭 시 인라인 편집 기능
+      editIcon.addEventListener("click", (e) => {
+        e.stopPropagation();
+
+        if (isEditing) return; // 이미 편집 중이면 무시
+        isEditing = true;
+
+        // 기존 텍스트 저장
+        const currentName = customTOCNames[itemId] || displayQuestionText;
+
+        // 기존 텍스트 링크 숨기기
+        tocLink.style.display = "none";
+
+        // 인라인 편집을 위한 입력 요소 생성
+        const inputElement = document.createElement("input");
+        inputElement.type = "text";
+        inputElement.value = currentName;
+        inputElement.style.width = "90%";
+        inputElement.style.border = "1px solid #ccc";
+        inputElement.style.borderRadius = "4px";
+        inputElement.style.padding = "2px 5px";
+        inputElement.style.fontSize = "12px";
+        inputElement.style.outline = "none";
+
+        // 에디트 아이콘 숨기기
+        editIcon.style.display = "none";
+
+        // 클릭 이벤트 막기
+        inputElement.addEventListener("click", (e) => {
+          e.stopPropagation();
+        });
+
+        // 엔터 키 처리
+        inputElement.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            completeEdit();
+          } else if (e.key === "Escape") {
+            cancelEdit();
+          }
+        });
+
+        // 포커스 잃을 때 편집 완료
+        inputElement.addEventListener("blur", () => {
+          // uc57duac04uc758 uc9c0uc5f0uc744 uc8fcuc5b4 Enter ud0a4 uc774ubca4ud2b8uac00 uba3cuc800 ucc98ub9acub418ub3c4ub85d ud568
+          setTimeout(() => {
+            if (isEditing) {
+              completeEdit();
+            }
+          }, 100);
+        });
+
+        // 편집 완료 함수
+        function completeEdit() {
+          if (!isEditing) return; // uc774ubbf8 ud3b8uc9d1uc774 uc885ub8ccub418uc5c8ub2e4uba74 uc544ubb34 uac83ub3c4 ud558uc9c0 uc54auc74c
+
+          const newName = inputElement.value.trim();
+          if (newName !== "" && newName !== currentName) {
+            // uc0c8 uc774ub984 uc800uc7a5
+            customTOCNames[itemId] = newName;
+
+            // uc2a4ud1a0ub9acuc9c0uc5d0 uc800uc7a5
+            chrome.storage.sync.set({ customTOCNames: customTOCNames });
+
+            // TOC uc5c5ub370uc774ud2b8
+            isEditing = false;
+            updateTOC();
+          } else {
+            cancelEdit();
+          }
+        }
+
+        // 편집 취소 함수
+        function cancelEdit() {
+          if (!isEditing) return; // uc774ubbf8 ud3b8uc9d1uc774 uc885ub8ccub418uc5c8ub2e4uba74 uc544ubb34 uac83ub3c4 ud558uc9c0 uc54auc74c
+
+          tocLink.style.display = "block";
+
+          // uc694uc18cuac00 uc5ecuc804ud788 DOMuc5d0 uc874uc7acud558ub294uc9c0 ud655uc778
+          if (inputElement.parentNode) {
+            inputElement.remove();
+          }
+
+          editIcon.style.display = "block";
+          isEditing = false;
+        }
+
+        // 입력 요소 추가
+        tocItem.insertBefore(inputElement, tocLink);
+        inputElement.focus();
+        inputElement.select();
+      });
+
+      tocItem.appendChild(tocLink);
+      tocItem.appendChild(editIcon);
+      tocList.appendChild(tocItem);
     }
   });
   if (userQuestionCount > 0) {
@@ -957,21 +979,48 @@ function observeUrlChange() {
 }
 
 // Answer generation status functions (updated)
+// Answer generation status functions (updated)
 function isGenerating() {
+  // 1. Check for the stop button by data-testid (User provided: data-testid="stop-button")
   const stopButton = document.querySelector(
     'button[data-testid="stop-button"]',
   );
-  return stopButton !== null;
+  if (stopButton) return true;
+
+  // 2. Check for aria-label "Stop streaming" (User provided)
+  const stopButtonAria = document.querySelector(
+    'button[aria-label="Stop streaming"]',
+  );
+  if (stopButtonAria) return true;
+
+  // 3. Fallback: Check for "Stop generating" just in case
+  const stopButtonOldAria = document.querySelector(
+    'button[aria-label="Stop generating"]',
+  );
+  if (stopButtonOldAria) return true;
+
+  return false;
 }
 
 function isCompleted() {
-  const speechButton = document.querySelector(
-    'button[data-testid="composer-speech-button"]',
+  // 1. Check for "Start voice mode" button (User provided: appears before/after generation)
+  const voiceModeButton = document.querySelector(
+    'button[aria-label="Start voice mode"]',
   );
+
+  // 2. Check for "Send prompt" button (User provided: appears when typing)
   const sendButton = document.querySelector(
     'button[data-testid="send-button"]',
   );
-  return speechButton !== null || sendButton !== null;
+
+  // 3. Check for send button by aria-label (User provided: aria-label="Send prompt")
+  const sendButtonAria = document.querySelector(
+    'button[aria-label="Send prompt"]',
+  );
+
+  return (
+    voiceModeButton !== null || sendButton !== null || sendButtonAria !== null
+  );
 }
 
 let generating = false;
